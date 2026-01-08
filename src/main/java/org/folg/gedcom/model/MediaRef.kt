@@ -13,37 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: dallan
  * Date: 1/7/12
  */
-public class MediaRef extends ExtensionContainer {
-   private String ref = null;
+class MediaRef : ExtensionContainer() {
+    var ref: String? = null
 
-   public String getRef() {
-      return ref;
-   }
+    /**
+     * Convenience function to dereference media
+     * @param gedcom Gedcom
+     * @return referenced media
+     */
+    fun getMedia(gedcom: Gedcom): Media? {
+        return gedcom.getMedia(ref)
+    }
 
-   public void setRef(String ref) {
-      this.ref = ref;
-   }
-
-   /**
-    * Convenience function to dereference media
-    * @param gedcom Gedcom
-    * @return referenced media
-    */
-   public Media getMedia(Gedcom gedcom) {
-      return gedcom.getMedia(ref);
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

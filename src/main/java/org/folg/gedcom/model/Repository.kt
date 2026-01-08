@@ -13,136 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/29/11
- * 
+ *
  * omit: Reference number
  * add: Www, Email
  */
-public class Repository extends NoteContainer {
-   private String id = null;
-   private String value = null;
-   private String name = null;
-   private Address addr = null;
-   private String phon = null;
-   private String fax = null;
-   private String rin = null;
-   private Change chan = null;
-   private String _email = null;
-   private String emailTag = null;
-   private String _www = null;
-   private String wwwTag = null;
+class Repository : NoteContainer() {
+    var id: String? = null
+    var value: String? = null
+    var name: String? = null
+    var address: Address? = null
+    var phone: String? = null
 
-   public String getId() {
-      return id;
-   }
+    var fax: String? = null
+    var rin: String? = null
+    var change: Change? = null
+    var email: String? = null
+    var emailTag: String? = null
+    var www: String? = null
+    var wwwTag: String? = null
 
-   public void setId(String id) {
-      this.id = id;
-   }
-
-   public String getValue() {
-      return value;
-   }
-
-   public void setValue(String value) {
-      this.value = value;
-   }
-
-   public String getName() {
-      return name;
-   }
-
-   public void setName(String name) {
-      this.name = name;
-   }
-
-   public Address getAddress() {
-      return addr;
-   }
-
-   public void setAddress(Address addr) {
-      this.addr = addr;
-   }
-
-   public String getPhone() {
-      return phon;
-   }
-
-   public void setPhone(String phon) {
-      this.phon = phon;
-   }
-
-   public String getFax() {
-      return fax;
-   }
-
-   public void setFax(String fax) {
-      this.fax = fax;
-   }
-
-   public String getRin() {
-      return rin;
-   }
-
-   public void setRin(String rin) {
-      this.rin = rin;
-   }
-
-   public Change getChange() {
-      return chan;
-   }
-
-   public void setChange(Change chan) {
-      this.chan = chan;
-   }
-
-   public String getEmail() {
-      return _email;
-   }
-
-   public void setEmail(String email) {
-      this._email = email;
-   }
-
-   public String getEmailTag() {
-      return emailTag;
-   }
-
-   public void setEmailTag(String emailTag) {
-      this.emailTag = emailTag;
-   }
-
-   public String getWww() {
-      return _www;
-   }
-
-   public void setWww(String www) {
-      this._www = www;
-   }
-
-   public String getWwwTag() {
-      return wwwTag;
-   }
-
-   public void setWwwTag(String wwwTag) {
-      this.wwwTag = wwwTag;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         if (addr != null) {
-            addr.accept(visitor);
-         }
-         if (chan != null) {
-            chan.accept(visitor);
-         }
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            if (address != null) {
+                address!!.accept(visitor)
+            }
+            if (change != null) {
+                change!!.accept(visitor)
+            }
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

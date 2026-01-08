@@ -13,103 +13,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/26/11
- * 
+ *
  * omit: reference number
  * don't make this a SourceCitationContainer, because that would allow nested notes
  */
-public class Note extends ExtensionContainer {
-   private String id = null;
-   private String value = null;
-   private String rin = null;
-   private Change chan = null;
-   private List<SourceCitation> sourceCitations = null;
-   private boolean sourceCitationsUnderValue = false; // yuck: Reunion does this: 0 NOTE 1 CONT ... 2 SOUR; remember for round-trip
+class Note : ExtensionContainer() {
+    var id: String? = null
+    var value: String? = null
+    var rin: String? = null
+    var change: Change? = null
+    var _sourceCitations: MutableList<SourceCitation>? = null
+    var isSourceCitationsUnderValue: Boolean =
+        false // yuck: Reunion does this: 0 NOTE 1 CONT ... 2 SOUR; remember for round-trip
 
-   public String getId() {
-      return id;
-   }
+    fun getSourceCitations(): List<SourceCitation> {
+        return _sourceCitations ?: emptyList()
+    }
 
-   public void setId(String id) {
-      this.id = id;
-   }
+    fun setSourceCitations(sourceCitations: MutableList<SourceCitation>?) {
+        this._sourceCitations = sourceCitations
+    }
 
-   public String getValue() {
-      return value;
-   }
+    fun addSourceCitation(sourceCitation: SourceCitation) {
+        if (_sourceCitations == null) {
+            _sourceCitations = ArrayList()
+        }
+        _sourceCitations!!.add(sourceCitation)
+    }
 
-   public void setValue(String value) {
-      this.value = value;
-   }
+    fun visitContainedObjects(visitor: Visitor, includeSourceCitations: Boolean) {
+        if (change != null) {
+            change!!.accept(visitor)
+        }
+        if (includeSourceCitations) {
+            for (sourceCitation in getSourceCitations()) {
+                sourceCitation.accept(visitor)
+            }
+        }
+        super.visitContainedObjects(visitor)
+    }
 
-   public String getRin() {
-      return rin;
-   }
+    override fun visitContainedObjects(visitor: Visitor) {
+        visitContainedObjects(visitor, true)
+    }
 
-   public void setRin(String rin) {
-      this.rin = rin;
-   }
-
-   public Change getChange() {
-      return chan;
-   }
-
-   public void setChange(Change chan) {
-      this.chan = chan;
-   }
-
-   public List<SourceCitation> getSourceCitations() {
-      return sourceCitations != null ? sourceCitations : Collections.<SourceCitation>emptyList();
-   }
-
-   public void setSourceCitations(List<SourceCitation> sourceCitations) {
-      this.sourceCitations = sourceCitations;
-   }
-
-   public void addSourceCitation(SourceCitation sourceCitation) {
-      if (sourceCitations == null) {
-         sourceCitations = new ArrayList<SourceCitation>();
-      }
-      sourceCitations.add(sourceCitation);
-   }
-
-   public boolean isSourceCitationsUnderValue() {
-      return sourceCitationsUnderValue;
-   }
-
-   public void setSourceCitationsUnderValue(boolean sourceRefsUnderValue) {
-      this.sourceCitationsUnderValue = sourceRefsUnderValue;
-   }
-
-   public void visitContainedObjects(Visitor visitor, boolean includeSourceCitations) {
-      if (chan != null) {
-         chan.accept(visitor);
-      }
-      if (includeSourceCitations) {
-         for (SourceCitation sourceCitation : getSourceCitations()) {
-            sourceCitation.accept(visitor);
-         }
-      }
-      super.visitContainedObjects(visitor);
-   }
-
-   public void visitContainedObjects(Visitor visitor) {
-      visitContainedObjects(visitor, true);
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         this.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            this.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

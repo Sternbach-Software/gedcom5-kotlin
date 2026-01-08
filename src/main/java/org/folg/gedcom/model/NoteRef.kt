@@ -13,61 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package org.folg.gedcom.model
 
 /**
  * User: dallan
  * Date: 1/3/12
  * don't make this a SourceCitationContainer, because that would allow notes within note refs
  */
-public class NoteRef extends ExtensionContainer {
-   private String ref = null;
-   private List<SourceCitation> sourceCitations = null;
+class NoteRef : ExtensionContainer() {
+    var ref: String? = null
+    private var sourceCitations: MutableList<SourceCitation>? = null
 
-   public String getRef() {
-      return ref;
-   }
+    /**
+     * Convenience function to dereference note
+     * @param gedcom Gedcom
+     * @return referenced note
+     */
+    fun getNote(gedcom: Gedcom): Note? {
+        return gedcom.getNote(ref)
+    }
 
-   public void setRef(String ref) {
-      this.ref = ref;
-   }
+    fun getSourceCitations(): List<SourceCitation> {
+        return sourceCitations ?: emptyList()
+    }
 
-   /**
-    * Convenience function to dereference note
-    * @param gedcom Gedcom
-    * @return referenced note
-    */
-   public Note getNote(Gedcom gedcom) {
-      return gedcom.getNote(ref);
-   }
+    fun setSourceCitations(sourceCitations: MutableList<SourceCitation>?) {
+        this.sourceCitations = sourceCitations
+    }
 
-   public List<SourceCitation> getSourceCitations() {
-      return sourceCitations != null ? sourceCitations : Collections.<SourceCitation>emptyList();
-   }
+    fun addSourceCitation(sourceCitation: SourceCitation) {
+        if (sourceCitations == null) {
+            sourceCitations = ArrayList()
+        }
+        sourceCitations!!.add(sourceCitation)
+    }
 
-   public void setSourceCitations(List<SourceCitation> sourceCitations) {
-      this.sourceCitations = sourceCitations;
-   }
-
-   public void addSourceCitation(SourceCitation sourceCitation) {
-      if (sourceCitations == null) {
-         sourceCitations = new ArrayList<SourceCitation>();
-      }
-      sourceCitations.add(sourceCitation);
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         for (SourceCitation sourceCitation : getSourceCitations()) {
-            sourceCitation.accept(visitor);
-         }
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            for (sourceCitation in getSourceCitations()) {
+                sourceCitation.accept(visitor)
+            }
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

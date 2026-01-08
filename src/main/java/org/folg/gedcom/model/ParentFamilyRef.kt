@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
@@ -22,30 +21,14 @@ package org.folg.gedcom.model;
  *
  * add: primary
  */
-public class ParentFamilyRef extends SpouseFamilyRef {
-   private String pedi;
-   private String _primary;
+class ParentFamilyRef : SpouseFamilyRef() {
+    var relationshipType: String? = null
+    var primary: String? = null
 
-   public String getRelationshipType() {
-      return pedi;
-   }
-
-   public void setRelationshipType(String pedi) {
-      this.pedi = pedi;
-   }
-
-   public String getPrimary() {
-      return _primary;
-   }
-
-   public void setPrimary(String primary) {
-      this._primary = primary;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

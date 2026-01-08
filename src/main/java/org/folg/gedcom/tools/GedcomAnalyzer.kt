@@ -13,137 +13,131 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.folg.gedcom.tools
 
-package org.folg.gedcom.tools;
-
-import org.folg.gedcom.parser.ErrorHandler;
-import org.folg.gedcom.parser.ModelParser;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-import org.xml.sax.SAXParseException;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.HashSet;
-import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.folg.gedcom.parser.*
+import org.kohsuke.args4j.CmdLineException
+import org.kohsuke.args4j.CmdLineParser
+import org.kohsuke.args4j.Option
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.xml.sax.SAXParseException
+import java.io.*
 
 /**
  * User: dallan
  * Date: 1/2/12
  */
-public class GedcomAnalyzer implements ErrorHandler {
-   private static final Logger logger = LoggerFactory.getLogger("org.folg.gedcom.tools");
+class GedcomAnalyzer : ErrorHandler {
+    @Option(name = "-i", required = true, usage = "file or directory containing gedcom files to analyze")
+    private val gedcomIn: File? = null
 
-   @Option(name="-i", required=true, usage="file or directory containing gedcom files to analyze")
-   private File gedcomIn;
+    @Option(name = "-w", required = false, usage = "warnings file out")
+    private val warningsOut: File? = null
 
-   @Option(name="-w", required=false, usage="warnings file out")
-   private File warningsOut;
+    @Option(name = "-e", required = false, usage = "errors file out")
+    private val errorsOut: File? = null
 
-   @Option(name="-e", required=false, usage="errors file out")
-   private File errorsOut;
+    private val parser = ModelParser()
+    private var warnings: MutableSet<String?>? = null
+    private var errors: MutableSet<String?>? = null
+    private val ccWarnings: CountsCollector
+    private val ccErrors: CountsCollector
+    private var cntWarnings: Int
+    private var cntErrors: Int
+    private val cntTotal: Int
+    private var file: File? = null
 
-   private ModelParser parser;
-   private Set<String> warnings;
-   private Set<String> errors;
-   private CountsCollector ccWarnings;
-   private CountsCollector ccErrors;
-   private int cntWarnings;
-   private int cntErrors;
-   private int cntTotal;
-   private File file;
+    init {
+        parser.setErrorHandler(this)
+        ccWarnings = CountsCollector()
+        ccErrors = CountsCollector()
+        cntTotal = 0
+        cntWarnings = 0
+        cntErrors = 0
+    }
 
-   public GedcomAnalyzer() {
-      parser = new ModelParser();
-      parser.setErrorHandler(this);
-      ccWarnings = new CountsCollector();
-      ccErrors = new CountsCollector();
-      cntTotal = 0;
-      cntWarnings = 0;
-      cntErrors = 0;
-   }
+    override fun warning(message: String?, lineNumber: Int) {
+        logger.info("$message @ $lineNumber")
+        warnings!!.add(message)
+    }
 
-   public void warning(String message, int lineNumber) {
-      logger.info(message+" @ "+lineNumber);
-      warnings.add(message);
-   }
+    override fun error(message: String?, lineNumber: Int) {
+        logger.warn("$message @ $lineNumber")
+        errors!!.add(message)
+    }
 
-   public void error(String message, int lineNumber) {
-      logger.warn(message+" @ "+lineNumber);
-      errors.add(message);
-   }
+    override fun fatalError(message: String?, lineNumber: Int) {
+        // we'll log this below
+    }
 
-   public void fatalError(String message, int lineNumber) {
-      // we'll log this below
-   }
+    fun analyzeGedcom(gedcomFile: File?) {
+        warnings = HashSet()
+        errors = HashSet()
+        this.file = gedcomFile
 
-   public void analyzeGedcom(File gedcomFile) {
-      warnings = new HashSet<String>();
-      errors = new HashSet<String>();
-      this.file = gedcomFile;
+        try {
+            parser.parseGedcom(gedcomFile)
+            if (warnings!!.size > 0 || errors!!.size > 0) {
+                cntWarnings++
+            }
+            if (errors!!.size > 0) {
+                cntErrors++
+            }
+            for (warning in warnings!!) {
+                ccWarnings.add(warning)
+            }
+            for (error in errors!!) {
+                ccErrors.add(error)
+            }
+        } catch (e: SAXParseException) {
+            logger.error("SaxParseException for file: " + file!!.name + " " + e.message + " @ " + e.lineNumber)
+        } catch (e: IOException) {
+            logger.error("IOException for file: " + file!!.name + " " + e.message)
+        } catch (e: RuntimeException) {
+            e.printStackTrace()
+            logger.error("Exception for file: " + file!!.name + " " + e.message)
+        }
+    }
 
-      try {
-         parser.parseGedcom(gedcomFile);
-         if (warnings.size() > 0 || errors.size() > 0) {
-            cntWarnings++;
-         }
-         if (errors.size() > 0) {
-            cntErrors++;
-         }
-         for (String warning : warnings) {
-            ccWarnings.add(warning);
-         }
-         for (String error : errors) {
-            ccErrors.add(error);
-         }
-      } catch (SAXParseException e) {
-         logger.error("SaxParseException for file: "+file.getName()+" "+e.getMessage()+" @ "+e.getLineNumber());
-      } catch (IOException e) {
-         logger.error("IOException for file: " + file.getName() + " " + e.getMessage());
-      } catch (RuntimeException e) {
-         e.printStackTrace();
-         logger.error("Exception for file: "+file.getName()+" "+e.getMessage());
-      }
-   }
+    fun getWarnings(): CountsCollector = ccWarnings
 
-   public CountsCollector getWarnings() {
-      return ccWarnings;
-   }
+    fun getErrors(): CountsCollector = ccErrors
 
-   public CountsCollector getErrors() {
-      return ccErrors;
-   }
+    @Throws(FileNotFoundException::class)
+    private fun doMain() {
+        if (gedcomIn!!.isDirectory) {
+            for (file in gedcomIn.listFiles()) {
+                analyzeGedcom(file)
+            }
+        } else if (gedcomIn.isFile) {
+            analyzeGedcom(gedcomIn)
+        }
 
-   private void doMain() throws FileNotFoundException {
-      if (gedcomIn.isDirectory()) {
-         for (File file : gedcomIn.listFiles()) {
-            analyzeGedcom(file);
-         }
-      }
-      else if (gedcomIn.isFile()) {
-         analyzeGedcom(gedcomIn);
-      }
+        println("Total=$cntTotal with warnings=$cntWarnings with errors=$cntErrors")
+        getWarnings().writeSorted(
+            false,
+            1,
+            if (warningsOut != null) PrintWriter(warningsOut) else PrintWriter(System.out)
+        )
+        getErrors().writeSorted(false, 1, if (errorsOut != null) PrintWriter(errorsOut) else PrintWriter(System.out))
+    }
 
-      System.out.println("Total="+cntTotal+" with warnings="+ cntWarnings +" with errors="+ cntErrors);
-      getWarnings().writeSorted(false, 1, warningsOut != null ? new PrintWriter(warningsOut) : new PrintWriter(System.out));
-      getErrors().writeSorted(false, 1, errorsOut != null ? new PrintWriter(errorsOut) : new PrintWriter(System.out));
-   }
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger("org.folg.gedcom.tools")
 
-   public static void main(String[] args) throws FileNotFoundException {
-      GedcomAnalyzer self = new GedcomAnalyzer();
-      CmdLineParser parser = new CmdLineParser(self);
-      try {
-         parser.parseArgument(args);
-         self.doMain();
-      }
-      catch (CmdLineException e) {
-         System.err.println(e.getMessage());
-         parser.printUsage(System.err);
-      }
-   }
+        @Throws(FileNotFoundException::class)
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val self = GedcomAnalyzer()
+            val parser = CmdLineParser(self)
+            try {
+                parser.parseArgument(*args)
+                self.doMain()
+            } catch (e: CmdLineException) {
+                System.err.println(e.message)
+                parser.printUsage(System.err)
+            }
+        }
+    }
 }

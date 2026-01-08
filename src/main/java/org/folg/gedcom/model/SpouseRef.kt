@@ -13,55 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/27/11
  */
-public class SpouseRef extends ExtensionContainer {
-   private String ref = null;
-   private String _pref = null;
+open class SpouseRef : ExtensionContainer() {
+    var ref: String? = null
+    var preferred: String? = null
 
-   public String getRef() {
-      return ref;
-   }
+    /**
+     * Convenience function to dereference person
+     * @param gedcom Gedcom
+     * @return referenced person
+     */
+    fun getPerson(gedcom: Gedcom): Person? {
+        return gedcom.getPerson(ref)
+    }
 
-   public void setRef(String ref) {
-      this.ref = ref;
-   }
+    override fun accept(visitor: Visitor) {
+        throw RuntimeException("Not implemented - pass isHusband")
+    }
 
-   /**
-    * Convenience function to dereference person
-    * @param gedcom Gedcom
-    * @return referenced person
-    */
-   public Person getPerson(Gedcom gedcom) {
-      return gedcom.getPerson(ref);
-   }
-
-   public String getPreferred() {
-      return _pref;
-   }
-
-   public void setPreferred(String pref) {
-      this._pref = pref;
-   }
-   
-   public void accept(Visitor visitor) {
-      throw new RuntimeException("Not implemented - pass isHusband");
-   }
-
-   /**
-    * Handle the visitor  
-    * @param visitor Visitor
-    * @param isHusband false for wife; ChildRef overrides this method
-    */
-   public void accept(Visitor visitor, boolean isHusband) {
-      if (visitor.visit(this, isHusband)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    /**
+     * Handle the visitor
+     * @param visitor Visitor
+     * @param isHusband false for wife; ChildRef overrides this method
+     */
+    fun accept(visitor: Visitor, isHusband: Boolean) {
+        if (visitor.visit(this, isHusband)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

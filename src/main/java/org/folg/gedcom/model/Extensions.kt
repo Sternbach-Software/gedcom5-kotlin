@@ -13,12 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
@@ -26,30 +21,4 @@ import java.util.Set;
  *
  * Make Extensions a class so we can use an ExtensionsTypeAdapter with Gson
  */
-public class Extensions {
-    private Map<String, Object> extensions;
-    
-    public Extensions() {
-        extensions = new HashMap<String, Object>();
-    }
-    
-    public Map<String,Object> getExtensions() {
-        return extensions;
-    }
-    
-    public void setExtensions(Map<String,Object> extensions) {
-        this.extensions = extensions;
-    }
-
-    public Object get(String key) {
-        return extensions.get(key);
-    }
-
-    public void put(String key, Object extension) {
-        extensions.put(key, extension);
-    }
-
-    public Set<String> getKeys() {
-        return extensions.keySet();
-    }
-}
+class Extensions(map: MutableMap<String, Any> = HashMap()) : MutableMap<String, Any> by map

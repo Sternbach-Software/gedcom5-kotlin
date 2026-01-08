@@ -27,19 +27,19 @@ public class TreeParserTest {
 
         GedcomTag headTag = gedcomTags.get(0);
         assertNotNull(headTag);
-        assertEquals("HEAD", headTag.getTag());
+        assertEquals("HEAD", headTag.tag);
 
         GedcomTag submissionTag = gedcomTags.get(1);
         assertNotNull(submissionTag);
-        assertEquals("SUBM", submissionTag.getTag());
+        assertEquals("SUBM", submissionTag.tag);
 
         GedcomTag individualTag = gedcomTags.get(2);
         assertNotNull(individualTag);
-        assertEquals("INDI", individualTag.getTag());
+        assertEquals("INDI", individualTag.tag);
 
         GedcomTag repoTag = gedcomTags.get(3);
         assertNotNull(repoTag);
-        assertEquals("REPO", repoTag.getTag());
+        assertEquals("REPO", repoTag.tag);
     }
 
     @Test

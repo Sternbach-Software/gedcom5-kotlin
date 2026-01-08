@@ -13,37 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/27/11
  */
-public class LdsOrdinance extends EventFact {
-   private String stat = null;
-   private String temp = null;
+class LdsOrdinance : EventFact() {
+    var status: String? = null
+    var temple: String? = null
 
-   public String getStatus() {
-      return stat;
-   }
-
-   public void setStatus(String stat) {
-      this.stat = stat;
-   }
-
-   public String getTemple() {
-      return temp;
-   }
-
-   public void setTemple(String temp) {
-      this.temp = temp;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

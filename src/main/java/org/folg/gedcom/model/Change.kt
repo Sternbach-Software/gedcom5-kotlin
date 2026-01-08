@@ -13,31 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/25/11
  */
-public class Change extends NoteContainer {
-   private DateTime date = null;
+class Change : NoteContainer() {
+    var dateTime: DateTime? = null
 
-   public DateTime getDateTime() {
-      return date;
-   }
-
-   public void setDateTime(DateTime date) {
-      this.date = date;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         if (date != null) {
-            date.accept(visitor);
-         }
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            if (dateTime != null) {
+                dateTime!!.accept(visitor)
+            }
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

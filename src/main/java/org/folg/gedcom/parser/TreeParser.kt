@@ -13,157 +13,150 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.folg.gedcom.parser
 
-package org.folg.gedcom.parser;
-
-import org.folg.gedcom.model.GedcomTag;
-import org.gedml.GedcomParser;
-import org.xml.sax.*;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.List;
-import java.util.Stack;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.folg.gedcom.model.GedcomTag
+import org.gedml.GedcomParser
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.xml.sax.*
+import java.io.*
+import java.util.*
 
 /**
  * Call parseGedcom to parse a gedcom file into a list of GedcomTag's
  * User: Dallan
  * Date: 12/23/11
  */
-public class TreeParser implements ContentHandler, org.xml.sax.ErrorHandler {
-   private static final Logger logger = LoggerFactory.getLogger("org.folg.gedcom.parser");
+class TreeParser : ContentHandler, org.xml.sax.ErrorHandler {
+    private var locator: Locator? = null
+    private var tree: GedcomTag? = null
+    private var nodeStack: Stack<GedcomTag>? = null
+    private var errorHandler: ErrorHandler? = null
 
-   private Locator locator;
-   private GedcomTag tree;
-   private Stack<GedcomTag> nodeStack;
-   private ErrorHandler errorHandler = null;
+    override fun setDocumentLocator(locator: Locator) {
+        this.locator = locator
+    }
 
-   @Override
-   public void setDocumentLocator(Locator locator) {
-      this.locator = locator;
-   }
+    @Throws(SAXException::class)
+    override fun startDocument() {
+        tree = null
+        nodeStack = Stack()
+    }
 
-   @Override
-   public void startDocument() throws SAXException {
-      tree = null;
-      nodeStack = new Stack<GedcomTag>();
-   }
+    @Throws(SAXException::class)
+    override fun endDocument() {
+        // ignore
+    }
 
-   @Override
-   public void endDocument() throws SAXException {
-      // ignore
-   }
+    @Throws(SAXException::class)
+    override fun startPrefixMapping(prefix: String, uri: String) {
+        // ignore
+    }
 
-   @Override
-   public void startPrefixMapping(String prefix, String uri) throws SAXException {
-      // ignore
-   }
+    @Throws(SAXException::class)
+    override fun endPrefixMapping(prefix: String) {
+        // ignore
+    }
 
-   @Override
-   public void endPrefixMapping(String prefix) throws SAXException {
-      // ignore
-   }
+    @Throws(SAXException::class)
+    override fun startElement(uri: String, localName: String, qName: String, atts: Attributes) {
+        val node = GedcomTag(atts.getValue("ID"), localName, atts.getValue("REF"))
+        if (tree == null) {
+            tree = node
+        } else {
+            nodeStack!!.peek().addChild(node)
+        }
+        nodeStack!!.push(node)
+    }
 
-   @Override
-   public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException {
-      GedcomTag node = new GedcomTag(atts.getValue("ID"), localName, atts.getValue("REF"));
-      if (tree == null) {
-         tree = node;
-      }
-      else {
-         nodeStack.peek().addChild(node);
-      }
-      nodeStack.push(node);
-   }
+    @Throws(SAXException::class)
+    override fun endElement(uri: String, localName: String, qName: String) {
+        nodeStack!!.pop()
+    }
 
-   @Override
-   public void endElement(String uri, String localName, String qName) throws SAXException {
-      nodeStack.pop();      
-   }
+    @Throws(SAXException::class)
+    override fun characters(ch: CharArray, start: Int, length: Int) {
+        val s = String(ch, start, length)
+        val tos = nodeStack!!.peek()
+        tos.appendValue(s)
+    }
 
-   @Override
-   public void characters(char[] ch, int start, int length) throws SAXException {
-      String s = new String(ch, start, length);
-      GedcomTag tos = nodeStack.peek();
-      tos.appendValue(s);
-   }
+    @Throws(SAXException::class)
+    override fun ignorableWhitespace(ch: CharArray, start: Int, length: Int) {
+        // ignore
+    }
 
-   @Override
-   public void ignorableWhitespace(char[] ch, int start, int length) throws SAXException {
-      // ignore
-   }
+    @Throws(SAXException::class)
+    override fun processingInstruction(target: String, data: String) {
+        // ignore
+    }
 
-   @Override
-   public void processingInstruction(String target, String data) throws SAXException {
-      // ignore
-   }
+    @Throws(SAXException::class)
+    override fun skippedEntity(name: String) {
+        // ignore
+    }
 
-   @Override
-   public void skippedEntity(String name) throws SAXException {
-      // ignore
-   }
+    @Throws(SAXException::class)
+    override fun warning(exception: SAXParseException) {
+        if (errorHandler != null) {
+            errorHandler!!.warning(exception.message, exception.lineNumber)
+        } else {
+            logger.info(exception.message + " @ " + exception.lineNumber)
+        }
+    }
 
-   @Override
-   public void warning(SAXParseException exception) throws SAXException {
-      if (errorHandler != null) {
-         errorHandler.warning(exception.getMessage(), exception.getLineNumber());
-      }
-      else {
-         logger.info(exception.getMessage() + " @ " + exception.getLineNumber());
-      }
-   }
+    @Throws(SAXException::class)
+    override fun error(exception: SAXParseException) {
+        if (errorHandler != null) {
+            errorHandler!!.error(exception.message, exception.lineNumber)
+        } else {
+            logger.warn(exception.message + " @ " + exception.lineNumber)
+        }
+    }
 
-   @Override
-   public void error(SAXParseException exception) throws SAXException {
-      if (errorHandler != null) {
-         errorHandler.error(exception.getMessage(), exception.getLineNumber());
-      }
-      else {
-         logger.warn(exception.getMessage() + " @ " + exception.getLineNumber());
-      }
-   }
+    @Throws(SAXException::class)
+    override fun fatalError(exception: SAXParseException) {
+        if (errorHandler != null) {
+            errorHandler!!.fatalError(exception.message, exception.lineNumber)
+        } else {
+            logger.error(exception.message + " @ " + exception.lineNumber)
+        }
+    }
 
-   @Override
-   public void fatalError(SAXParseException exception) throws SAXException {
-      if (errorHandler != null) {
-         errorHandler.fatalError(exception.getMessage(), exception.getLineNumber());
-      }
-      else {
-         logger.error(exception.getMessage() + " @ " + exception.getLineNumber());
-      }
-   }
+    fun setErrorHandler(errorHandler: ErrorHandler?) {
+        this.errorHandler = errorHandler
+    }
 
-   public void setErrorHandler(ErrorHandler errorHandler) {
-      this.errorHandler = errorHandler;
-   }
+    @Throws(SAXParseException::class, IOException::class)
+    fun parseGedcom(gedcomFile: File?): MutableList<GedcomTag?>? {
+        val parser = gedcomParser()
+        parser.parse(gedcomFile!!.toURI().toString())
+        return tree!!._children
+    }
 
-   public List<GedcomTag> parseGedcom(File gedcomFile) throws SAXParseException, IOException {
-      GedcomParser parser = gedcomParser();
-      parser.parse(gedcomFile.toURI().toString());
-      return tree.getChildren();
-   }
+    @Throws(SAXParseException::class, IOException::class)
+    fun parseGedcom(`is`: InputStream): List<GedcomTag?>? {
+        val parser = gedcomParser()
+        parser.parse(`is`)
+        return tree!!._children
+    }
 
-   public List<GedcomTag> parseGedcom(InputStream is) throws SAXParseException, IOException {
-      GedcomParser parser = gedcomParser();
-      parser.parse(is);
-      return tree.getChildren();
-   }
+    @Throws(SAXParseException::class, IOException::class)
+    fun parseGedcom(reader: Reader?): List<GedcomTag?>? {
+        val parser = gedcomParser()
+        parser.parse(reader)
+        return tree!!._children
+    }
 
-   public List<GedcomTag> parseGedcom(Reader reader) throws SAXParseException, IOException {
-      GedcomParser parser = gedcomParser();
-      parser.parse(reader);
-      return tree.getChildren();
-   }
+    private fun gedcomParser(): GedcomParser {
+        val parser = GedcomParser()
+        parser.contentHandler = this
+        parser.errorHandler = this
+        return parser
+    }
 
-   private GedcomParser gedcomParser() {
-      GedcomParser parser = new GedcomParser();
-      parser.setContentHandler(this);
-      parser.setErrorHandler(this);
-      return parser;
-   }
-
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger("org.folg.gedcom.parser")
+    }
 }

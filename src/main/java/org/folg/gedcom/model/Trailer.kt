@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/26/11
  */
-public class Trailer extends ExtensionContainer {
-	// TODO do we need this?  how many gedcoms attach stuff to the trailer?
-   public void accept(Visitor visitor) {
-      // ignore
-   }
+class Trailer : ExtensionContainer() {
+    // TODO do we need this?  how many gedcoms attach stuff to the trailer?
+    override fun accept(visitor: Visitor) {
+        // ignore
+    }
 }

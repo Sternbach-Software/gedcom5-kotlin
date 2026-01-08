@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.parser;
+package org.folg.gedcom.parser
 
 /**
  * User: dallan
  * Date: 1/2/12
  */
-public interface ErrorHandler {
-   public void warning(String message, int lineNumber);
-   public void error(String message, int lineNumber);
-   public void fatalError(String message, int lineNumber);
+interface ErrorHandler {
+    fun warning(message: String?, lineNumber: Int)
+    fun error(message: String?, lineNumber: Int)
+    fun fatalError(message: String?, lineNumber: Int)
 }

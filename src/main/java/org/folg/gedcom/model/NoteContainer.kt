@@ -13,75 +13,70 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/29/11
  */
-public abstract class NoteContainer extends ExtensionContainer {
-   private List<NoteRef> noteRefs = null;
-   private List<Note> notes = null;
+abstract class NoteContainer : ExtensionContainer() {
+    private var noteRefs: MutableList<NoteRef>? = null
+    private var notes: MutableList<Note>? = null
 
-   /**
-    * Use this function in place of getNotes and getNoteRefs
-    * @param gedcom Gedcom
-    * @return inline notes as well as referenced notes
-    */
-   public List<Note> getAllNotes(Gedcom gedcom) {
-      List<Note> notes = new ArrayList<Note>();
-      for (NoteRef noteRef : getNoteRefs()) {
-         Note note = noteRef.getNote(gedcom);
-         if (note != null) {
-            notes.add(note);
-         }
-      }
-      notes.addAll(getNotes());
-      return notes;
-   }
+    /**
+     * Use this function in place of getNotes and getNoteRefs
+     * @param gedcom Gedcom
+     * @return inline notes as well as referenced notes
+     */
+    fun getAllNotes(gedcom: Gedcom): List<Note> {
+        val notes: MutableList<Note> = ArrayList()
+        for (noteRef in getNoteRefs()) {
+            val note = noteRef.getNote(gedcom)
+            if (note != null) {
+                notes.add(note)
+            }
+        }
+        notes.addAll(getNotes())
+        return notes
+    }
 
-   public List<NoteRef> getNoteRefs() {
-      return noteRefs != null ? noteRefs : Collections.<NoteRef>emptyList();
-   }
+    fun getNoteRefs(): List<NoteRef> {
+        return noteRefs ?: emptyList()
+    }
 
-   public void setNoteRefs(List<NoteRef> noteRefs) {
-      this.noteRefs = noteRefs;
-   }
+    fun setNoteRefs(noteRefs: MutableList<NoteRef>?) {
+        this.noteRefs = noteRefs
+    }
 
-   public void addNoteRef(NoteRef noteRef) {
-      if (noteRefs == null) {
-         noteRefs = new ArrayList<NoteRef>();
-      }
-      noteRefs.add(noteRef);
-   }
+    fun addNoteRef(noteRef: NoteRef) {
+        if (noteRefs == null) {
+            noteRefs = ArrayList()
+        }
+        noteRefs!!.add(noteRef)
+    }
 
-   public List<Note> getNotes() {
-      return notes != null ? notes : Collections.<Note>emptyList();
-   }
+    fun getNotes(): List<Note> {
+        return notes ?: emptyList()
+    }
 
-   public void setNotes(List<Note> notes) {
-      this.notes = notes;
-   }
+    fun setNotes(notes: MutableList<Note>?) {
+        this.notes = notes
+    }
 
-   public void addNote(Note note) {
-      if (notes == null) {
-         notes = new ArrayList<Note>();
-      }
-      notes.add(note);
-   }
+    fun addNote(note: Note) {
+        if (notes == null) {
+            notes = ArrayList()
+        }
+        notes!!.add(note)
+    }
 
-   public void visitContainedObjects(Visitor visitor) {
-      for (NoteRef noteRef : getNoteRefs()) {
-         noteRef.accept(visitor);
-      }
-      for (Note note : getNotes()) {
-         note.accept(visitor);
-      }
-      super.visitContainedObjects(visitor);
-   }
+    override fun visitContainedObjects(visitor: Visitor) {
+        for (noteRef in getNoteRefs()) {
+            noteRef.accept(visitor)
+        }
+        for (note in getNotes()) {
+            note.accept(visitor)
+        }
+        super.visitContainedObjects(visitor)
+    }
 }

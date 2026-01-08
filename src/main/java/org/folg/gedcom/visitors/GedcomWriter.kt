@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.folg.gedcom.visitors
 
-package org.folg.gedcom.visitors;
-
-import org.folg.gedcom.model.*;
-import org.folg.gedcom.model.Name;
-import org.folg.gedcom.parser.ModelParser;
-import org.gedml.AnselOutputStreamWriter;
-import org.gedml.GedcomParser;
-
-import java.io.*;
-import java.util.List;
-import java.util.Stack;
+import org.folg.gedcom.model.*
+import org.folg.gedcom.model.SourceCitation.DataTagContents
+import org.folg.gedcom.parser.ModelParser
+import org.gedml.AnselOutputStreamWriter
+import org.gedml.GedcomParser
+import java.io.*
+import java.util.*
 
 /**
  * User: Dallan
@@ -32,576 +29,533 @@ import java.util.Stack;
  *
  * Export a model as GEDCOM
  */
-public class GedcomWriter extends Visitor {
+class GedcomWriter : Visitor() {
+    private var out: Writer? = null
+    private var eol = ""
+    private var stack: Stack<Any?>? = null
+    private var nestedException: IOException? = null
 
-   private Writer out = null;
-   private String eol = "";
-   private Stack<Object> stack;
-   private IOException nestedException;
+    @Throws(IOException::class)
+    fun write(gedcom: Gedcom?, file: File?) {
+        val out: OutputStream = FileOutputStream(file)
+        write(gedcom, out)
+        out.close()
+    }
 
-   public void write(Gedcom gedcom, File file) throws IOException {
-      OutputStream out = new FileOutputStream(file);
-      write(gedcom, out);
-      out.close();
-   }
+    @Throws(IOException::class)
+    fun write(gedcom: Gedcom?, out: OutputStream?) {
+        stack = Stack()
+        nestedException = null
+        val charset = getCharsetName(gedcom)
+        eol = (if (charset == "x-MacRoman") "\r" else "\n")
+        val writer = if ("ANSEL" == charset) {
+            AnselOutputStreamWriter(out)
+        } else {
+            OutputStreamWriter(out, charset)
+        }
+        this.out = BufferedWriter(writer)
+        gedcom!!.accept(this)
+        this.out!!.write("0 TRLR$eol")
+        this.out!!.flush()
+        if (nestedException != null) {
+            throw nestedException!!
+        }
+    }
 
-   public void write(Gedcom gedcom, OutputStream out) throws IOException {
-      stack = new Stack<Object>();
-      nestedException = null;
-      String charset = getCharsetName(gedcom);
-      eol = (charset.equals("x-MacRoman") ? "\r" : "\n");
-      OutputStreamWriter writer;
-      if ("ANSEL".equals(charset)) {
-         writer = new AnselOutputStreamWriter(out);
-      }
-      else {
-         writer = new OutputStreamWriter(out, charset);
-      }
-      this.out = new BufferedWriter(writer);
-      gedcom.accept(this);
-      this.out.write("0 TRLR"+eol);
-      this.out.flush();
-      if (nestedException != null) {
-         throw nestedException;
-      }
-   }
+    private fun getCharsetName(gedcom: Gedcom?): String? {
+        val header = gedcom?.header
+        val generator = header?.generator?.value
+        var charset = header?.characterSet?.value
+        val version = header?.characterSet?.version
+        charset = GedcomParser.Companion.getCorrectedCharsetName(generator, charset, version)
+        if (charset.length == 0) {
+            charset = "UTF-8" // default
+        }
+        return charset
+    }
 
-   private String getCharsetName(Gedcom gedcom) {
-      Header header = gedcom.getHeader();
-      String generator = (header != null && header.getGenerator() != null ? header.getGenerator().getValue() : null);
-      String charset = (header != null && header.getCharacterSet() != null ? header.getCharacterSet().getValue() : null);
-      String version = (header != null && header.getCharacterSet() != null ? header.getCharacterSet().getVersion() : null);
-      charset = GedcomParser.getCorrectedCharsetName(generator, charset, version);
-      if (charset.length() == 0) {
-         charset = "UTF-8"; // default
-      }
-      return charset;
-   }
-
-   private void write(String tag, String id, String ref, String value, boolean forceValueOnSeparateLine) {
-      try {
-         int level = stack.size();
-         out.write(level+" ");
-         if (id != null && id.length() > 0) {
-            out.write("@"+id+"@ ");
-         }
-         out.write(tag);
-         if (ref != null && ref.length() > 0) {
-            out.write(" @"+ref+"@");
-         }
-         if (value != null && value.length() > 0) {
-            if (forceValueOnSeparateLine && !value.startsWith("\n")) {
-               out.write(eol+(level+1)+" CONC ");
+    private fun write(
+        tag: String?,
+        id: String? = null,
+        ref: String? = null,
+        value: String? = null,
+        forceValueOnSeparateLine: Boolean = false
+    ) {
+        try {
+            val level = stack!!.size
+            out!!.write("$level ")
+            if (id != null && id?.isNotEmpty() == true) {
+                out!!.write("@$id@ ")
             }
-            else {
-               out.write(" ");
+            out!!.write(tag)
+            if (ref != null && ref?.isNotEmpty() == true) {
+                out!!.write(" @$ref@")
             }
-            StringBuilder buf = new StringBuilder(value);
-            int cnt = 0;
-            boolean lastLine = false;
-            while (!lastLine) {
-               int nlPos = buf.indexOf("\n");
-               String line;
-               if (nlPos >= 0) {
-                  line = buf.substring(0, nlPos);
-                  buf.delete(0,nlPos+1);
-               }
-               else {
-                  line = buf.toString();
-                  lastLine = true;
-               }
-               if (cnt > 0) {
-                  out.write(eol+(level+1)+" CONT ");
-               }
-               while (line.length() > 200) {
-                  out.write(line.substring(0,200));
-                  line = line.substring(200);
-                  out.write(eol+(level+1)+" CONC ");
-               }
-               out.write(line);
-               cnt++;
+            if (value != null && value?.isNotEmpty() == true) {
+                if (forceValueOnSeparateLine && !value.startsWith("\n")) {
+                    out!!.write(eol + (level + 1) + " CONC ")
+                } else {
+                    out!!.write(" ")
+                }
+                val buf = StringBuilder(value)
+                var cnt = 0
+                var lastLine = false
+                while (!lastLine) {
+                    val nlPos = buf.indexOf("\n")
+                    var line: String
+                    if (nlPos >= 0) {
+                        line = buf.substring(0, nlPos)
+                        buf.delete(0, nlPos + 1)
+                    } else {
+                        line = buf.toString()
+                        lastLine = true
+                    }
+                    if (cnt > 0) {
+                        out!!.write(eol + (level + 1) + " CONT ")
+                    }
+                    while (line.length > 200) {
+                        out!!.write(line.substring(0, 200))
+                        line = line.substring(200)
+                        out!!.write(eol + (level + 1) + " CONC ")
+                    }
+                    out!!.write(line)
+                    cnt++
+                }
             }
-         }
-         out.write(eol);
-      } catch (IOException e) {
-         nestedException = e;
-      }
-   }
+            out!!.write(eol)
+        } catch (e: IOException) {
+            nestedException = e
+        }
+    }
 
-   private void write(String tag, String id, String ref, String value) {
-      write(tag, id, ref, value, false);
-   }
+    private fun write(tag: String?, value: String?) {
+        write(tag, null, null, value)
+    }
 
-   private void write(String tag) {
-      write(tag, null, null, null);
-   }
-
-   private void write(String tag, String value) {
-      write(tag, null, null, value);
-   }
-
-   private void writeFieldExtensions(String fieldName, ExtensionContainer ec) {
-      @SuppressWarnings("unchecked")
-      List<GedcomTag> moreTags = (List<GedcomTag>)ec.getExtension(ModelParser.MORE_TAGS_EXTENSION_KEY);
-      if (moreTags != null) {
-         for (GedcomTag tag : moreTags) {
-            if (fieldName.equals(tag.getParentTagName())) {
-               stack.push(new Object()); // placeholder
-               writeGedcomTag(tag);
-               stack.pop();
+    private fun writeFieldExtensions(fieldName: String?, ec: ExtensionContainer) {
+        val moreTags = ec.getExtension(ModelParser.Companion.MORE_TAGS_EXTENSION_KEY) as List<GedcomTag>
+        if (moreTags != null) {
+            for (tag in moreTags) {
+                if (fieldName == tag.parentTagName) {
+                    stack!!.push(Any()) // placeholder
+                    writeGedcomTag(tag)
+                    stack!!.pop()
+                }
             }
-         }
-      }
-   }
+        }
+    }
 
-   private void writeString(String tag, ExtensionContainer ec, String value) {
-      if (value != null && value.length() > 0) {
-         write(tag, value);
-			writeFieldExtensions(tag, ec);
-      }
-   }
-   private void writeRef(String tag, ExtensionContainer ec, String ref) {
-      if (ref != null && ref.length() > 0) {
-         write(tag, null, ref, null);
-         writeFieldExtensions(tag, ec);
-      }
-   }
+    private fun writeString(tag: String?, ec: ExtensionContainer, value: String?) {
+        if (value != null && value?.isNotEmpty() == true) {
+            write(tag, value)
+            writeFieldExtensions(tag, ec)
+        }
+    }
 
-   @Override
-   public boolean visit(Address address) {
-      write("ADDR", address.getValue());
-      stack.push(address);
-      writeString("ADR1", address, address.getAddressLine1());
-      writeString("ADR2", address, address.getAddressLine2());
-      writeString("CITY", address, address.getCity());
-      writeString("STAE", address, address.getState());
-      writeString("POST", address, address.getPostalCode());
-      writeString("CTRY", address, address.getCountry());
-      writeString("_NAME", address, address.getName());
-      return true;
-   }
+    private fun writeRef(tag: String, ec: ExtensionContainer, ref: String?) {
+        if (ref != null && ref?.isNotEmpty() == true) {
+            write(tag, null, ref, null)
+            writeFieldExtensions(tag, ec)
+        }
+    }
 
-   @Override
-   public boolean visit(Association association) {
-      write("ASSO", null, association.getRef(), null);
-      stack.push(association);
-      writeString("TYPE", association, association.getType());
-      writeString("RELA", association, association.getRelation());
-      return true;
-   }
+    override fun visit(address: Address): Boolean {
+        write("ADDR", address.value)
+        stack!!.push(address)
+        writeString("ADR1", address, address.addressLine1)
+        writeString("ADR2", address, address.addressLine2)
+        writeString("CITY", address, address.city)
+        writeString("STAE", address, address.state)
+        writeString("POST", address, address.postalCode)
+        writeString("CTRY", address, address.country)
+        writeString("_NAME", address, address.name)
+        return true
+    }
 
-   @Override
-   public boolean visit(Change change) {
-      write("CHAN");
-      stack.push(change);
-      return true;
-   }
+    override fun visit(association: Association): Boolean {
+        write("ASSO", null, association.ref, null)
+        stack!!.push(association)
+        writeString("TYPE", association, association.type)
+        writeString("RELA", association, association.relation)
+        return true
+    }
 
-   @Override
-   public boolean visit(CharacterSet characterSet) {
-      write("CHAR", characterSet.getValue());
-      stack.push(characterSet);
-      writeString("VERS", characterSet, characterSet.getVersion());
-      return true;
-   }
+    override fun visit(change: Change?): Boolean {
+        write("CHAN")
+        stack!!.push(change)
+        return true
+    }
 
-   @Override
-   public boolean visit(ChildRef childRef) {
-      write("CHIL", null, childRef.getRef(), null);
-      stack.push(childRef);
-      writeSpouseRefStrings(childRef);
-      return true;
-   }
+    override fun visit(characterSet: CharacterSet): Boolean {
+        write("CHAR", characterSet.value)
+        stack!!.push(characterSet)
+        writeString("VERS", characterSet, characterSet.version)
+        return true
+    }
 
-   @Override
-   public boolean visit(DateTime dateTime) {
-      write("DATE", dateTime.getValue());
-      stack.push(dateTime);
-      writeString("TIME", dateTime, dateTime.getTime());
-      return true;
-   }
+    override fun visit(childRef: ChildRef): Boolean {
+        write("CHIL", null, childRef.ref, null)
+        stack!!.push(childRef)
+        writeSpouseRefStrings(childRef)
+        return true
+    }
 
-   private void writeEventFactStrings(EventFact eventFact) {
-      writeString("TYPE", eventFact, eventFact.getType());
-      writeString("DATE", eventFact, eventFact.getDate());
-      writeString("PLAC", eventFact, eventFact.getPlace());
-      writeString("CAUS", eventFact, eventFact.getCause());
-      writeString("RIN", eventFact, eventFact.getRin());
-      writeString(eventFact.getUidTag(), eventFact, eventFact.getUid());
-   }
+    override fun visit(dateTime: DateTime): Boolean {
+        write("DATE", dateTime.value)
+        stack!!.push(dateTime)
+        writeString("TIME", dateTime, dateTime.time)
+        return true
+    }
 
-   @Override
-   public boolean visit(EventFact eventFact) {
-      write(eventFact.getTag(), eventFact.getValue());
-      stack.push(eventFact);
-      writeEventFactStrings(eventFact);
-      return true;
-   }
+    private fun writeEventFactStrings(eventFact: EventFact) {
+        writeString("TYPE", eventFact, eventFact.type)
+        writeString("DATE", eventFact, eventFact.date)
+        writeString("PLAC", eventFact, eventFact.place)
+        writeString("CAUS", eventFact, eventFact.cause)
+        writeString("RIN", eventFact, eventFact.rin)
+        writeString(eventFact.uidTag, eventFact, eventFact.uid)
+    }
 
-   private void writeGedcomTag(GedcomTag tag) {
-      write(tag.getTag(), tag.getId(), tag.getRef(), tag.getValue());
-      stack.push(tag);
-      for (GedcomTag child : tag.getChildren()) {
-         writeGedcomTag(child);
-      }
-      stack.pop();
-   }
+    override fun visit(eventFact: EventFact): Boolean {
+        write(eventFact.tag, eventFact.value)
+        stack!!.push(eventFact)
+        writeEventFactStrings(eventFact)
+        return true
+    }
 
-   @Override
-   public boolean visit(String extensionKey, Object extension) {
-      if (ModelParser.MORE_TAGS_EXTENSION_KEY.equals(extensionKey)) {
-         @SuppressWarnings("unchecked")
-         List<GedcomTag> moreTags = (List<GedcomTag>)extension;
-         for (GedcomTag tag : moreTags) {
-            if (tag.getParentTagName() == null) { // if field name is not null, the extension should have been written already
-               writeGedcomTag(tag);
+    private fun writeGedcomTag(tag: GedcomTag?) {
+        write(tag?.tag, tag?.id, tag?.ref, tag?.value)
+        stack!!.push(tag)
+        for (child in tag!!._children ?: emptyList()) {
+            writeGedcomTag(child)
+        }
+        stack!!.pop()
+    }
+
+    override fun visit(extensionKey: String?, extension: Any?): Boolean {
+        if (ModelParser.Companion.MORE_TAGS_EXTENSION_KEY == extensionKey) {
+            val moreTags = extension as List<GedcomTag>?
+            for (tag in moreTags!!) {
+                if (tag.parentTagName == null) { // if field name is not null, the extension should have been written already
+                    writeGedcomTag(tag)
+                }
             }
-         }
-      }
-      return true;
-   }
+        }
+        return true
+    }
 
-   private void writePersonFamilyCommonContainerStrings(PersonFamilyCommonContainer pf) {
-      for (String refn : pf.getReferenceNumbers()) {
-         // it's a problem if there's multiple refns with sub-tags
-         writeString("REFN", pf, refn);
-      }
-      writeString("RIN", pf, pf.getRin());
-      writeString(pf.getUidTag(), pf, pf.getUid());
-   }
+    private fun writePersonFamilyCommonContainerStrings(pf: PersonFamilyCommonContainer) {
+        for (refn in pf.referenceNumbers) {
+            // it's a problem if there's multiple refns with sub-tags
+            writeString("REFN", pf, refn)
+        }
+        writeString("RIN", pf, pf.rin)
+        writeString(pf.uidTag, pf, pf.uid)
+    }
 
-   @Override
-   public boolean visit(Family family) {
-      write("FAM", family.getId(), null, null);
-      stack.push(family);
-      writePersonFamilyCommonContainerStrings(family);
-      return true;
-   }
+    override fun visit(family: Family): Boolean {
+        write("FAM", family.id, null, null)
+        stack!!.push(family)
+        writePersonFamilyCommonContainerStrings(family)
+        return true
+    }
 
-   @Override
-   public boolean visit(Gedcom gedcom) {
-      return true;
-   }
+    override fun visit(gedcom: Gedcom?): Boolean {
+        return true
+    }
 
-   @Override
-   public boolean visit(GedcomVersion gedcomVersion) {
-      write("GEDC");
-      stack.push(gedcomVersion);
-      writeString("VERS", gedcomVersion, gedcomVersion.getVersion());
-      writeString("FORM", gedcomVersion, gedcomVersion.getForm());
-      return true;
-   }
+    override fun visit(gedcomVersion: GedcomVersion): Boolean {
+        write("GEDC")
+        stack!!.push(gedcomVersion)
+        writeString("VERS", gedcomVersion, gedcomVersion.version)
+        writeString("FORM", gedcomVersion, gedcomVersion.form)
+        return true
+    }
 
-   @Override
-   public boolean visit(Generator generator) {
-      write("SOUR", generator.getValue());
-      stack.push(generator);
-      writeString("NAME", generator, generator.getName());
-      writeString("VERS", generator, generator.getVersion());
-      return true;
-   }
+    override fun visit(generator: Generator): Boolean {
+        write("SOUR", generator.value)
+        stack!!.push(generator)
+        writeString("NAME", generator, generator.name)
+        writeString("VERS", generator, generator.version)
+        return true
+    }
 
-   @Override
-   public boolean visit(GeneratorCorporation generatorCorporation) {
-      write("CORP", generatorCorporation.getValue());
-      stack.push(generatorCorporation);
-      writeString("PHON", generatorCorporation, generatorCorporation.getPhone());
-      writeString(generatorCorporation.getWwwTag(), generatorCorporation, generatorCorporation.getWww());
-      return true;
-   }
+    override fun visit(generatorCorporation: GeneratorCorporation): Boolean {
+        write("CORP", generatorCorporation.value)
+        stack!!.push(generatorCorporation)
+        writeString("PHON", generatorCorporation, generatorCorporation.phone)
+        writeString(generatorCorporation.wwwTag, generatorCorporation, generatorCorporation.www)
+        return true
+    }
 
-   @Override
-   public boolean visit(GeneratorData generatorData) {
-      write("DATA", generatorData.getValue());
-      stack.push(generatorData);
-      writeString("DATE", generatorData, generatorData.getDate());
-      writeString("COPR", generatorData, generatorData.getCopyright());
-      return true;
-   }
+    override fun visit(generatorData: GeneratorData): Boolean {
+        write("DATA", generatorData.value)
+        stack!!.push(generatorData)
+        writeString("DATE", generatorData, generatorData.date)
+        writeString("COPR", generatorData, generatorData.copyright)
+        return true
+    }
 
-   @Override
-   public boolean visit(Header header) {
-      write("HEAD");
-      stack.push(header);
-      writeString("DEST", header, header.getDestination());
-      writeString("FILE", header, header.getFile());
-      writeString("COPR", header, header.getCopyright());
-      writeString("LANG", header, header.getLanguage());
-      writeRef("SUBM", header, header.getSubmitterRef());
-      writeRef("SUBN", header, header.getSubmissionRef());
-      return true;
-   }
+    override fun visit(header: Header): Boolean {
+        write("HEAD")
+        stack!!.push(header)
+        writeString("DEST", header, header.destination)
+        writeString("FILE", header, header.file)
+        writeString("COPR", header, header.copyright)
+        writeString("LANG", header, header.language)
+        writeRef("SUBM", header, header.submitterRef)
+        writeRef("SUBN", header, header.submissionRef)
+        return true
+    }
 
-   @Override
-   public boolean visit(LdsOrdinance ldsOrdinance) {
-      write(ldsOrdinance.getTag(), ldsOrdinance.getValue());
-      stack.push(ldsOrdinance);
-      writeEventFactStrings(ldsOrdinance);
-      writeString("STAT", ldsOrdinance, ldsOrdinance.getStatus());
-      writeString("TEMP", ldsOrdinance, ldsOrdinance.getTemple());
-      return true;
-   }
+    override fun visit(ldsOrdinance: LdsOrdinance): Boolean {
+        write(ldsOrdinance.tag, ldsOrdinance.value)
+        stack!!.push(ldsOrdinance)
+        writeEventFactStrings(ldsOrdinance)
+        writeString("STAT", ldsOrdinance, ldsOrdinance.status)
+        writeString("TEMP", ldsOrdinance, ldsOrdinance.temple)
+        return true
+    }
 
-   @Override
-   public boolean visit(Media media) {
-      write("OBJE", media.getId(), null, null);
-      stack.push(media);
-      writeString("FORM", media, media.getFormat());
-      writeString("TITL", media, media.getTitle());
-      writeString("BLOB", media, media.getBlob());
-      writeString(media.getFileTag(), media, media.getFile());
-      writeString("_PRIM", media, media.getPrimary());
-      writeString("_TYPE", media, media.getType());
-      writeString("_SCBK", media, media.getScrapbook());
-      writeString("_SSHOW", media, media.getSlideShow());
-      return true;
-   }
+    override fun visit(media: Media): Boolean {
+        write("OBJE", media.id, null, null)
+        stack!!.push(media)
+        writeString("FORM", media, media.format)
+        writeString("TITL", media, media.title)
+        writeString("BLOB", media, media.blob)
+        writeString(media.fileTag, media, media.file)
+        writeString("_PRIM", media, media.primary)
+        writeString("_TYPE", media, media.type)
+        writeString("_SCBK", media, media.scrapbook)
+        writeString("_SSHOW", media, media.slideShow)
+        return true
+    }
 
-   @Override
-   public boolean visit(MediaRef mediaRef) {
-      write("OBJE", null, mediaRef.getRef(), null);
-      stack.push(mediaRef);
-      return true;
-   }
+    override fun visit(mediaRef: MediaRef): Boolean {
+        write("OBJE", null, mediaRef.ref, null)
+        stack!!.push(mediaRef)
+        return true
+    }
 
-   @Override
-   public boolean visit(Name name) {
-      // handle ALIA name by recording it with that tag
-      String tag;
-      String type = name.getType();
-      if ("ALIA".equals(type)) {
-         tag = type;
-         type = null;
-      }
-      else {
-         tag = "NAME";
-      }
-      write(tag, name.getValue());
-      stack.push(name);
-      writeString("GIVN", name, name.getGiven());
-      writeString("SURN", name, name.getSurname());
-      writeString("NPFX", name, name.getPrefix());
-      writeString("NSFX", name, name.getSuffix());
-      writeString("SPFX", name, name.getSurnamePrefix());
-      writeString("NICK", name, name.getNickname());
-      writeString(name.getTypeTag(), name, type);
-      writeString(name.getAkaTag(), name, name.getAka());
-      writeString(name.getMarriedNameTag(), name, name.getMarriedName());
-      return true;
-   }
+    override fun visit(name: Name): Boolean {
+        // handle ALIA name by recording it with that tag
+        val tag: String
+        var type = name.type
+        if ("ALIA" == type) {
+            tag = type
+            type = null
+        } else {
+            tag = "NAME"
+        }
+        write(tag, name.value)
+        stack!!.push(name)
+        writeString("GIVN", name, name.given)
+        writeString("SURN", name, name.surname)
+        writeString("NPFX", name, name.prefix)
+        writeString("NSFX", name, name.suffix)
+        writeString("SPFX", name, name.surnamePrefix)
+        writeString("NICK", name, name.nickname)
+        writeString(name.typeTag, name, type)
+        writeString(name.akaTag, name, name.aka)
+        writeString(name.marriedNameTag, name, name.marriedName)
+        return true
+    }
 
-   @Override
-   public boolean visit(Note note) {
-      boolean visitChildren = false;
-      if (note.isSourceCitationsUnderValue() && note.getSourceCitations().size() > 0 &&
-          note.getValue() != null && note.getValue().length() > 0) {
-         // yuck: handle Reunion broken citations: 0 NOTE 1 CONT ... 2 SOUR; also Easytree: 0 NOTE 1 CONC ... 2 SOUR
-         write("NOTE", note.getId(), null, note.getValue(), true);
-         stack.push(note);
-         stack.push(new Object()); // increment level to 2
-         for (SourceCitation sc : note.getSourceCitations()) {
-            sc.accept(this);
-         }
-         stack.pop();
-         visitChildren = true;
-      }
-      else {
-         write("NOTE", note.getId(), null, note.getValue());
-         stack.push(note);
-      }
+    override fun visit(note: Note): Boolean {
+        var visitChildren = false
+        if (note.isSourceCitationsUnderValue && note._sourceCitations?.isNotEmpty() == true && note.value != null && note.value?.isNotEmpty() == true) {
+            // yuck: handle Reunion broken citations: 0 NOTE 1 CONT ... 2 SOUR; also Easytree: 0 NOTE 1 CONC ... 2 SOUR
+            write("NOTE", note.id, null, note.value, true)
+            stack!!.push(note)
+            stack!!.push(Any()) // increment level to 2
+            for (sc in note._sourceCitations!!) {
+                sc!!.accept(this)
+            }
+            stack!!.pop()
+            visitChildren = true
+        } else {
+            write("NOTE", note.id, null, note.value)
+            stack!!.push(note)
+        }
 
-      // write note strings
-      writeString("RIN", note, note.getRin());
+        // write note strings
+        writeString("RIN", note, note.rin)
 
-      if (visitChildren) {
-         // if we return false below we need to visit the rest of the children and pop the stack here
-         note.visitContainedObjects(this, false);
-         stack.pop();
-      }
-      return !visitChildren;
-   }
+        if (visitChildren) {
+            // if we return false below we need to visit the rest of the children and pop the stack here
+            note.visitContainedObjects(this, false)
+            stack!!.pop()
+        }
+        return !visitChildren
+    }
 
-   @Override
-   public boolean visit(NoteRef noteRef) {
-      write("NOTE", null, noteRef.getRef(), null);
-      stack.push(noteRef);
-      return true;
-   }
+    override fun visit(noteRef: NoteRef): Boolean {
+        write("NOTE", null, noteRef.ref, null)
+        stack!!.push(noteRef)
+        return true
+    }
 
-   @Override
-   public boolean visit(ParentFamilyRef parentFamilyRef) {
-      write("FAMC", null, parentFamilyRef.getRef(), null);
-      stack.push(parentFamilyRef);
-      writeSpouseFamilyRefStrings(parentFamilyRef);
-      writeString("PEDI", parentFamilyRef, parentFamilyRef.getRelationshipType());
-      writeString("_PRIMARY", parentFamilyRef, parentFamilyRef.getPrimary());
-      return true;
-   }
+    override fun visit(parentFamilyRef: ParentFamilyRef): Boolean {
+        write("FAMC", null, parentFamilyRef.ref, null)
+        stack!!.push(parentFamilyRef)
+        writeSpouseFamilyRefStrings(parentFamilyRef)
+        writeString("PEDI", parentFamilyRef, parentFamilyRef.relationshipType)
+        writeString("_PRIMARY", parentFamilyRef, parentFamilyRef.primary)
+        return true
+    }
 
-   @Override
-   public boolean visit(ParentRelationship parentRelationship, boolean isFather) {
-      write(isFather ? "_FREL" : "_MREL", parentRelationship.getValue());
-      stack.push(parentRelationship);
-      return true;
-   }
+    override fun visit(parentRelationship: ParentRelationship, isFather: Boolean): Boolean {
+        write(if (isFather) "_FREL" else "_MREL", parentRelationship.value)
+        stack!!.push(parentRelationship)
+        return true
+    }
 
-   @Override
-   public boolean visit(Person person) {
-      write("INDI", person.getId(), null, null);
-      stack.push(person);
-      writeRef("ANCI", person, person.getAncestorInterestSubmitterRef());
-      writeRef("DESI", person, person.getDescendantInterestSubmitterRef());
-      writeString("RFN", person, person.getRecordFileNumber());
-      writeString("PHON", person, person.getPhone());
-      writeString(person.getEmailTag(), person, person.getEmail());
-      writePersonFamilyCommonContainerStrings(person);
-      return true;
-   }
+    override fun visit(person: Person): Boolean {
+        write("INDI", person.id, null, null)
+        stack!!.push(person)
+        writeRef("ANCI", person, person.ancestorInterestSubmitterRef)
+        writeRef("DESI", person, person.descendantInterestSubmitterRef)
+        writeString("RFN", person, person.recordFileNumber)
+        writeString("PHON", person, person.phone)
+        writeString(person.emailTag, person, person.email)
+        writePersonFamilyCommonContainerStrings(person)
+        return true
+    }
 
-   @Override
-   public boolean visit(Repository repository) {
-      write("REPO", repository.getId(), null, repository.getValue());
-      stack.push(repository);
-      writeString("NAME", repository, repository.getName());
-      writeString("PHON", repository, repository.getPhone());
-      writeString("RIN", repository, repository.getRin());
-      writeString(repository.getEmailTag(), repository, repository.getEmail());
-      writeString(repository.getWwwTag(), repository, repository.getWww());
-      return true;
-   }
+    override fun visit(repository: Repository): Boolean {
+        write("REPO", repository.id, null, repository.value)
+        stack!!.push(repository)
+        writeString("NAME", repository, repository.name)
+        writeString("PHON", repository, repository.phone)
+        writeString("RIN", repository, repository.rin)
+        writeString(repository.emailTag, repository, repository.email)
+        writeString(repository.wwwTag, repository, repository.www)
+        return true
+    }
 
-   @Override
-   public boolean visit(RepositoryRef repositoryRef) {
-      write("REPO", null, repositoryRef.getRef(), repositoryRef.getValue());
-      stack.push(repositoryRef);
-      if (repositoryRef.isMediUnderCalnTag() ||
-              (repositoryRef.getCallNumber() != null && repositoryRef.getCallNumber().length() > 0)) {
-         write("CALN", repositoryRef.getCallNumber());
-      }
-      if (repositoryRef.isMediUnderCalnTag()) {
-         stack.push(new Object()); // placeholder
-      }
-      writeString("MEDI", repositoryRef, repositoryRef.getMediaType());
-      if (repositoryRef.isMediUnderCalnTag()) {
-         stack.pop();
-      }
+    override fun visit(repositoryRef: RepositoryRef): Boolean {
+        write("REPO", null, repositoryRef.ref, repositoryRef.value)
+        stack!!.push(repositoryRef)
+        if (repositoryRef.isMediUnderCalnTag == true ||
+            (repositoryRef.callNumber != null && repositoryRef.callNumber?.isNotEmpty() == true)
+        ) {
+            write("CALN", repositoryRef.callNumber)
+        }
+        if (repositoryRef.isMediUnderCalnTag == true) {
+            stack!!.push(Any()) // placeholder
+        }
+        writeString("MEDI", repositoryRef, repositoryRef.mediaType)
+        if (repositoryRef.isMediUnderCalnTag == true) {
+            stack!!.pop()
+        }
 
-      return true;
-   }
+        return true
+    }
 
-   @Override
-   public boolean visit(Source source) {
-      write("SOUR", source.getId(), null, null);
-      stack.push(source);
-      writeString("AUTH", source, source.getAuthor());
-      writeString("TITL", source, source.getTitle());
-      writeString("ABBR", source, source.getAbbreviation());
-      writeString("PUBL", source, source.getPublicationFacts());
-      writeString("TEXT", source, source.getText());
-      writeString("REFN", source, source.getReferenceNumber());
-      writeString("RIN", source, source.getRin());
-      writeString("MEDI", source, source.getMediaType());
-      writeString("CALN", source, source.getCallNumber());
-      writeString(source.getTypeTag(), source, source.getType());
-      writeString(source.getUidTag(), source, source.getUid());
-      writeString("_PAREN", source, source.getParen());
-      writeString("_ITALIC", source, source.getItalic());
-      writeString("DATE", source, source.getDate());
-      return true;
-   }
+    override fun visit(source: Source): Boolean {
+        write("SOUR", source.id, null, null)
+        stack!!.push(source)
+        writeString("AUTH", source, source.author)
+        writeString("TITL", source, source.title)
+        writeString("ABBR", source, source.abbreviation)
+        writeString("PUBL", source, source.publicationFacts)
+        writeString("TEXT", source, source.text)
+        writeString("REFN", source, source.referenceNumber)
+        writeString("RIN", source, source.rin)
+        writeString("MEDI", source, source.mediaType)
+        writeString("CALN", source, source.callNumber)
+        writeString(source.typeTag, source, source.type)
+        writeString(source.uidTag, source, source.uid)
+        writeString("_PAREN", source, source.paren)
+        writeString("_ITALIC", source, source.italic)
+        writeString("DATE", source, source.date)
+        return true
+    }
 
-   private void writeUnderData(String tag, SourceCitation sourceCitation, String value) {
-      if (value != null && value.length() > 0) {
-         write("DATA");
-         stack.push(new Object()); // placeholder
-         writeString(tag, sourceCitation, value);
-         stack.pop();
-      }
-   }
-   @Override
-   public boolean visit(SourceCitation sourceCitation) {
-      write("SOUR", null, sourceCitation.getRef(), sourceCitation.getValue());
-      stack.push(sourceCitation);
-      writeString("PAGE", sourceCitation, sourceCitation.getPage());
-      writeString("QUAY", sourceCitation, sourceCitation.getQuality());
-      if (sourceCitation.getDataTagContents() == SourceCitation.DataTagContents.COMBINED &&
-          (sourceCitation.getDate() != null && sourceCitation.getDate().length() > 0 ||
-           sourceCitation.getText() != null && sourceCitation.getText().length() > 0)) {
-         write("DATA");
-         stack.push(new Object()); // placeholder
-         writeString("DATE", sourceCitation, sourceCitation.getDate());
-         writeString("TEXT", sourceCitation, sourceCitation.getText());
-         stack.pop();
-      }
-      else if (sourceCitation.getDataTagContents() == SourceCitation.DataTagContents.DATE) {
-         writeUnderData("DATE", sourceCitation, sourceCitation.getDate());
-         writeString("TEXT", sourceCitation, sourceCitation.getText());
-      }
-      else if (sourceCitation.getDataTagContents() == SourceCitation.DataTagContents.TEXT) {
-         writeUnderData("TEXT", sourceCitation, sourceCitation.getText());
-         writeString("DATE", sourceCitation, sourceCitation.getDate());
-      }
-      else if (sourceCitation.getDataTagContents() == SourceCitation.DataTagContents.SEPARATE) {
-         writeUnderData("DATE", sourceCitation, sourceCitation.getDate());
-         writeUnderData("TEXT", sourceCitation, sourceCitation.getText());
-      }
-      else if (sourceCitation.getDataTagContents() == null) {
-         writeString("DATE", sourceCitation, sourceCitation.getDate());
-         writeString("TEXT", sourceCitation, sourceCitation.getText());
-      }
-      return true;
-   }
+    private fun writeUnderData(tag: String, sourceCitation: SourceCitation, value: String?) {
+        if (value != null && value?.isNotEmpty() == true) {
+            write("DATA")
+            stack!!.push(Any()) // placeholder
+            writeString(tag, sourceCitation, value)
+            stack!!.pop()
+        }
+    }
 
-   private void writeSpouseRefStrings(SpouseRef spouseRef) {
-      writeString("_PREF", spouseRef, spouseRef.getPreferred());
-   }
+    override fun visit(sourceCitation: SourceCitation): Boolean {
+        write("SOUR", null, sourceCitation.ref, sourceCitation.value)
+        stack!!.push(sourceCitation)
+        writeString("PAGE", sourceCitation, sourceCitation.page)
+        writeString("QUAY", sourceCitation, sourceCitation.quality)
+        if (sourceCitation.dataTagContents == DataTagContents.COMBINED &&
+            (sourceCitation.date != null && sourceCitation.date?.isNotEmpty() == true ||
+                    sourceCitation.text != null && sourceCitation.text?.isNotEmpty() == true)
+        ) {
+            write("DATA")
+            stack!!.push(Any()) // placeholder
+            writeString("DATE", sourceCitation, sourceCitation.date)
+            writeString("TEXT", sourceCitation, sourceCitation.text)
+            stack!!.pop()
+        } else if (sourceCitation.dataTagContents == DataTagContents.DATE) {
+            writeUnderData("DATE", sourceCitation, sourceCitation.date)
+            writeString("TEXT", sourceCitation, sourceCitation.text)
+        } else if (sourceCitation.dataTagContents == DataTagContents.TEXT) {
+            writeUnderData("TEXT", sourceCitation, sourceCitation.text)
+            writeString("DATE", sourceCitation, sourceCitation.date)
+        } else if (sourceCitation.dataTagContents == DataTagContents.SEPARATE) {
+            writeUnderData("DATE", sourceCitation, sourceCitation.date)
+            writeUnderData("TEXT", sourceCitation, sourceCitation.text)
+        } else if (sourceCitation.dataTagContents == null) {
+            writeString("DATE", sourceCitation, sourceCitation.date)
+            writeString("TEXT", sourceCitation, sourceCitation.text)
+        }
+        return true
+    }
 
-   @Override
-   public boolean visit(SpouseRef spouseRef, boolean isHusband) {
-      write(isHusband ? "HUSB" : "WIFE", null, spouseRef.getRef(), null);
-      stack.push(spouseRef);
-      writeSpouseRefStrings(spouseRef);
-      return true;
-   }
+    private fun writeSpouseRefStrings(spouseRef: SpouseRef) {
+        writeString("_PREF", spouseRef, spouseRef.preferred)
+    }
 
-   private void writeSpouseFamilyRefStrings(SpouseFamilyRef spouseFamilyRef) {
-      // nothing to write
-   }
+    override fun visit(spouseRef: SpouseRef, isHusband: Boolean): Boolean {
+        write(if (isHusband) "HUSB" else "WIFE", null, spouseRef.ref, null)
+        stack!!.push(spouseRef)
+        writeSpouseRefStrings(spouseRef)
+        return true
+    }
 
-   @Override
-   public boolean visit(SpouseFamilyRef spouseFamilyRef) {
-      write("FAMS", null, spouseFamilyRef.getRef(), null);
-      stack.push(spouseFamilyRef);
-      writeSpouseFamilyRefStrings(spouseFamilyRef);
-      return true;
-   }
+    private fun writeSpouseFamilyRefStrings(spouseFamilyRef: SpouseFamilyRef) {
+        // nothing to write
+    }
 
-   @Override
-   public boolean visit(Submission submission) {
-      write("SUBN", submission.getId(), null, null);
-      stack.push(submission);
-      writeString("DESC", submission, submission.getDescription());
-      writeString("ORDI", submission, submission.getOrdinanceFlag());
-      return true;
-   }
+    override fun visit(spouseFamilyRef: SpouseFamilyRef): Boolean {
+        write("FAMS", null, spouseFamilyRef.ref, null)
+        stack!!.push(spouseFamilyRef)
+        writeSpouseFamilyRefStrings(spouseFamilyRef)
+        return true
+    }
 
-   @Override
-   public boolean visit(Submitter submitter) {
-      write("SUBM", submitter.getId(), null, submitter.getValue());
-      stack.push(submitter);
-      writeString("PHON", submitter, submitter.getPhone());
-      writeString("NAME", submitter, submitter.getName());
-      writeString("RIN", submitter, submitter.getRin());
-      writeString("LANG", submitter, submitter.getLanguage());
-      writeString(submitter.getWwwTag(), submitter, submitter.getWww());
-      writeString(submitter.getEmailTag(), submitter, submitter.getEmail());
-      return true;
-   }
+    override fun visit(submission: Submission): Boolean {
+        write("SUBN", submission.id, null, null)
+        stack!!.push(submission)
+        writeString("DESC", submission, submission.description)
+        writeString("ORDI", submission, submission.ordinanceFlag)
+        return true
+    }
 
-   @Override
-   public void endVisit(ExtensionContainer obj) {
-      if (!(obj instanceof Gedcom)) {
-         stack.pop();
-      }
-   }
+    override fun visit(submitter: Submitter): Boolean {
+        write("SUBM", submitter.id, null, submitter.value)
+        stack!!.push(submitter)
+        writeString("PHON", submitter, submitter.phone)
+        writeString("NAME", submitter, submitter.name)
+        writeString("RIN", submitter, submitter.rin)
+        writeString("LANG", submitter, submitter.language)
+        writeString(submitter.wwwTag, submitter, submitter.www)
+        writeString(submitter.emailTag, submitter, submitter.email)
+        return true
+    }
+
+    override fun endVisit(obj: ExtensionContainer?) {
+        if (obj !is Gedcom) {
+            stack!!.pop()
+        }
+    }
 }

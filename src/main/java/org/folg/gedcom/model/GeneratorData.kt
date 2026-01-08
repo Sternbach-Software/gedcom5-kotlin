@@ -13,46 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/26/11
  */
-public class GeneratorData extends ExtensionContainer {
-   private String value = null;
-   private String date = null;
-   private String copr = null;
+class GeneratorData : ExtensionContainer() {
+    var value: String? = null
+    var date: String? = null
+    var copyright: String? = null
 
-   public String getValue() {
-      return value;
-   }
-
-   public void setValue(String value) {
-      this.value = value;
-   }
-
-   public String getDate() {
-      return date;
-   }
-
-   public void setDate(String date) {
-      this.date = date;
-   }
-
-   public String getCopyright() {
-      return copr;
-   }
-
-   public void setCopyright(String copr) {
-      this.copr = copr;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

@@ -13,75 +13,70 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/30/11
  */
-public abstract class MediaContainer extends NoteContainer {
-   private List<MediaRef> mediaRefs = null;
-   private List<Media> media = null;
+abstract class MediaContainer : NoteContainer() {
+    private var mediaRefs: MutableList<MediaRef>? = null
+    private var media: MutableList<Media>? = null
 
-   /**
-    * Use this function in place of getMedia and getMediaRefs
-    * @param gedcom Gedcom
-    * @return inline media as well as referenced media
-    */
-   public List<Media> getAllMedia(Gedcom gedcom) {
-      List<Media> media = new ArrayList<Media>();
-      for (MediaRef mediaRef : getMediaRefs()) {
-         Media m = mediaRef.getMedia(gedcom);
-         if (m != null) {
-            media.add(m);
-         }
-      }
-      media.addAll(getMedia());
-      return media;
-   }
+    /**
+     * Use this function in place of getMedia and getMediaRefs
+     * @param gedcom Gedcom
+     * @return inline media as well as referenced media
+     */
+    fun getAllMedia(gedcom: Gedcom): List<Media> {
+        val media: MutableList<Media> = ArrayList()
+        for (mediaRef in getMediaRefs()) {
+            val m = mediaRef.getMedia(gedcom)
+            if (m != null) {
+                media.add(m)
+            }
+        }
+        media.addAll(getMedia())
+        return media
+    }
 
-   public List<MediaRef> getMediaRefs() {
-      return mediaRefs != null ? mediaRefs : Collections.<MediaRef>emptyList();
-   }
+    fun getMediaRefs(): List<MediaRef> {
+        return mediaRefs ?: emptyList()
+    }
 
-   public void setMediaRefs(List<MediaRef> mediaRefs) {
-      this.mediaRefs = mediaRefs;
-   }
+    fun setMediaRefs(mediaRefs: MutableList<MediaRef>?) {
+        this.mediaRefs = mediaRefs
+    }
 
-   public void addMediaRef(MediaRef mediaRef) {
-      if (mediaRefs == null) {
-         mediaRefs = new ArrayList<MediaRef>();
-      }
-      mediaRefs.add(mediaRef);
-   }
+    fun addMediaRef(mediaRef: MediaRef) {
+        if (mediaRefs == null) {
+            mediaRefs = ArrayList()
+        }
+        mediaRefs!!.add(mediaRef)
+    }
 
-   public List<Media> getMedia() {
-      return media != null ? media : Collections.<Media>emptyList();
-   }
+    fun getMedia(): List<Media> {
+        return media ?: emptyList()
+    }
 
-   public void setMedia(List<Media> media) {
-      this.media = media;
-   }
+    fun setMedia(media: MutableList<Media>?) {
+        this.media = media
+    }
 
-   public void addMedia(Media mediaObject) {
-      if (media == null) {
-         media = new ArrayList<Media>();
-      }
-      media.add(mediaObject);
-   }
+    fun addMedia(mediaObject: Media) {
+        if (media == null) {
+            media = ArrayList()
+        }
+        media!!.add(mediaObject)
+    }
 
-   public void visitContainedObjects(Visitor visitor) {
-      for (MediaRef mediaRef : getMediaRefs()) {
-         mediaRef.accept(visitor);
-      }
-      for (Media m : getMedia()) {
-         m.accept(visitor);
-      }
-      super.visitContainedObjects(visitor);
-   }
+    override fun visitContainedObjects(visitor: Visitor) {
+        for (mediaRef in getMediaRefs()) {
+            mediaRef.accept(visitor)
+        }
+        for (m in getMedia()) {
+            m.accept(visitor)
+        }
+        super.visitContainedObjects(visitor)
+    }
 }

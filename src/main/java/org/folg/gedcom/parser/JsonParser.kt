@@ -13,31 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.folg.gedcom.parser
 
-package org.folg.gedcom.parser;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.folg.gedcom.model.Gedcom;
-import org.folg.gedcom.model.GedcomTag;
-
-import java.io.*;
-import java.nio.charset.Charset;
-import java.util.List;
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import org.folg.gedcom.model.Gedcom
+import org.folg.gedcom.model.GedcomTag
+import java.io.*
+import java.nio.charset.Charset
 
 /**
  * User: dallan
  * Date: 1/2/12
  */
-public class JsonParser {
-    private Gson gson;
-
-    public JsonParser() {
-        gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .registerTypeAdapter(Gedcom.class, new GedcomTypeAdapter())
-                .create();
-    }
+class JsonParser {
+    private val gson: Gson = GsonBuilder()
+        .setPrettyPrinting()
+        .registerTypeAdapter(Gedcom::class.java, GedcomTypeAdapter())
+        .create()
 
     /**
      * Convert json-encoded string to Gedcom object
@@ -45,8 +38,8 @@ public class JsonParser {
      * @param json json-encoded string
      * @return Gedcom object
      */
-    public Gedcom fromJson(String json) {
-        return gson.fromJson(json, Gedcom.class);
+    fun fromJson(json: String?): Gedcom {
+        return gson.fromJson(json, Gedcom::class.java)
     }
 
     /**
@@ -55,8 +48,8 @@ public class JsonParser {
      * @param reader json source reader
      * @return Gedcom object
      */
-    public Gedcom fromJson(Reader reader) {
-        return gson.fromJson(reader, Gedcom.class);
+    fun fromJson(reader: Reader?): Gedcom {
+        return gson.fromJson(reader, Gedcom::class.java)
     }
 
     /**
@@ -65,9 +58,9 @@ public class JsonParser {
      * @param is json source stream
      * @return Gedcom object
      */
-    public Gedcom fromJson(InputStream is) {
-        InputStreamReader reader = new InputStreamReader(is, Charset.forName("UTF-8"));
-        return gson.fromJson(reader, Gedcom.class);
+    fun fromJson(`is`: InputStream?): Gedcom {
+        val reader = InputStreamReader(`is`, Charset.forName("UTF-8"))
+        return gson.fromJson(reader, Gedcom::class.java)
     }
 
     /**
@@ -76,8 +69,8 @@ public class JsonParser {
      * @param gedcom Gedcom
      * @return json-encoded string
      */
-    public String toJson(Gedcom gedcom) {
-        return gson.toJson(gedcom);
+    fun toJson(gedcom: Gedcom?): String {
+        return gson.toJson(gedcom)
     }
 
     /**
@@ -86,8 +79,8 @@ public class JsonParser {
      * @param gedcomTags output of TreeParser
      * @return json-encoded string
      */
-    public String toJson(List<GedcomTag> gedcomTags) {
-        return gson.toJson(gedcomTags);
+    fun toJson(gedcomTags: List<GedcomTag?>?): String {
+        return gson.toJson(gedcomTags)
     }
 
     /**
@@ -96,9 +89,9 @@ public class JsonParser {
      * @param gedcom Gedcom object
      * @param writer json output writer
      */
-    public void write(Gedcom gedcom, Writer writer) {
-        gson.toJson(gedcom, writer);
-        close(writer);
+    fun write(gedcom: Gedcom?, writer: Writer?) {
+        gson.toJson(gedcom, writer)
+        close(writer)
     }
 
     /**
@@ -107,10 +100,10 @@ public class JsonParser {
      * @param gedcom Gedcom object
      * @param os     json output stream
      */
-    public void write(Gedcom gedcom, OutputStream os) {
-        OutputStreamWriter writer = new OutputStreamWriter(os, Charset.forName("UTF-8"));
-        gson.toJson(gedcom, writer);
-        close(writer);
+    fun write(gedcom: Gedcom?, os: OutputStream?) {
+        val writer = OutputStreamWriter(os, Charset.forName("UTF-8"))
+        gson.toJson(gedcom, writer)
+        close(writer)
     }
 
     /**
@@ -119,9 +112,9 @@ public class JsonParser {
      * @param gedcomTags Gedcom tags
      * @param writer     json output writer
      */
-    public void write(List<GedcomTag> gedcomTags, Writer writer) {
-        gson.toJson(gedcomTags, writer);
-        close(writer);
+    fun write(gedcomTags: List<GedcomTag?>?, writer: Writer?) {
+        gson.toJson(gedcomTags, writer)
+        close(writer)
     }
 
     /**
@@ -130,20 +123,17 @@ public class JsonParser {
      * @param gedcomTags Gedcom tags
      * @param os         json output stream
      */
-    public void write(List<GedcomTag> gedcomTags, OutputStream os) {
-        OutputStreamWriter writer = new OutputStreamWriter(os, Charset.forName("UTF-8"));
-        gson.toJson(gedcomTags, writer);
-        close(writer);
+    fun write(gedcomTags: List<GedcomTag?>?, os: OutputStream?) {
+        val writer = OutputStreamWriter(os, Charset.forName("UTF-8"))
+        gson.toJson(gedcomTags, writer)
+        close(writer)
     }
 
-    private void close(Writer writer) {
+    private fun close(writer: Writer?) {
         try {
-            if (writer != null) {
-                writer.close();
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException("Closing writer failed", e);
+            writer?.close()
+        } catch (e: IOException) {
+            throw IllegalStateException("Closing writer failed", e)
         }
     }
-
 }

@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
@@ -23,113 +22,46 @@ package org.folg.gedcom.model;
  * add: name
  * note: addressLine1+2 are rarely used; addresses are generally stored in Value
  */
-public class Address extends ExtensionContainer {
-   private String value = null;
-   private String adr1 = null;
-   private String adr2 = null;
-   private String adr3 = null;
-   private String city = null;
-   private String stae = null;
-   private String post = null;
-   private String ctry = null;
-   private String _name = null;
+class Address : ExtensionContainer() {
+    var value: String? = null
+    var addressLine1: String? = null
+    var addressLine2: String? = null
+    var addressLine3: String? = null
+    var city: String? = null
+    var state: String? = null
+    var postalCode: String? = null
+    var country: String? = null
+    var name: String? = null
 
-   private void appendValue(StringBuilder buf, String value) {
-      if (value != null) {
-         if (buf.length() > 0) {
-            buf.append("\n");
-         }
-         buf.append(value);
-      }
-   }
+    private fun appendValue(buf: StringBuilder, value: String?) {
+        if (value != null) {
+            if (buf?.isNotEmpty() == true) {
+                buf.append("\n")
+            }
+            buf.append(value)
+        }
+    }
 
-   public String getDisplayValue() {
-      StringBuilder buf = new StringBuilder();
-      appendValue(buf, value);
-      appendValue(buf, adr1);
-      appendValue(buf, adr2);
-      appendValue(buf, adr3);
-      appendValue(buf, (city != null ? city : "")+(city != null && stae != null ? ", " : "")+(stae != null ? stae : "")+
-                       ((city != null || stae != null) && post != null ? " " : "")+(post != null ? post : ""));
-      appendValue(buf, ctry);
-      return buf.toString();
-   }
-   public String getValue() {
-      return value;
-   }
+    val displayValue: String
+        get() {
+            val buf = StringBuilder()
+            appendValue(buf, value)
+            appendValue(buf, addressLine1)
+            appendValue(buf, addressLine2)
+            appendValue(buf, addressLine3)
+            appendValue(
+                buf,
+                (if (city != null) city else "") + (if (city != null && state != null) ", " else "") + (if (state != null) state else "") +
+                        (if ((city != null || state != null) && this.postalCode != null) " " else "") + (if (postalCode != null) postalCode else "")
+            )
+            appendValue(buf, country)
+            return buf.toString()
+        }
 
-   public void setValue(String value) {
-      this.value = value;
-   }
-
-   public String getAddressLine1() {
-      return adr1;
-   }
-
-   public void setAddressLine1(String adr1) {
-      this.adr1 = adr1;
-   }
-
-   public String getAddressLine2() {
-      return adr2;
-   }
-
-   public void setAddressLine2(String adr2) {
-      this.adr2 = adr2;
-   }
-
-   public String getAddressLine3() {
-      return adr3;
-   }
-
-   public void setAddressLine3(String adr3) {
-      this.adr3 = adr3;
-   }
-
-   public String getCity() {
-      return city;
-   }
-
-   public void setCity(String city) {
-      this.city = city;
-   }
-
-   public String getState() {
-      return stae;
-   }
-
-   public void setState(String stae) {
-      this.stae = stae;
-   }
-
-   public String getPostalCode() {
-      return post;
-   }
-
-   public void setPostalCode(String post) {
-      this.post = post;
-   }
-
-   public String getCountry() {
-      return ctry;
-   }
-
-   public void setCountry(String ctry) {
-      this.ctry = ctry;
-   }
-
-   public String getName() {
-      return _name;
-   }
-
-   public void setName(String name) {
-      this._name = name;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

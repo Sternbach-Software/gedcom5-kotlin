@@ -13,216 +13,151 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.folg.gedcom.model
 
-package org.folg.gedcom.model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Simple data structure for a gedcom node - json-friendly
  * User: Dallan
  * Date: 12/23/11
  */
-public class GedcomTag implements Comparable<GedcomTag> {
-   private static final Logger logger = LoggerFactory.getLogger("org.folg.gedcom.model");
+class GedcomTag(var id: String?, @JvmField var tag: String?, var ref: String?) : Comparable<GedcomTag> {
+    var value: String? = null
+    var parentTagName: String? = null // used by ModelParser to store tags under string fields
+    var _children: MutableList<GedcomTag?>? = null
 
-   private String id;
-   private String tag;
-   private String ref;
-   private String value;
-   private String parentTagName; // used by ModelParser to store tags under string fields
-   private List<GedcomTag> children;
+    fun appendValue(value: String?) {
+        if (this.value == null) {
+            this.value = value
+        } else {
+            this.value += value
+        }
+    }
 
-   public GedcomTag(String id, String tag, String ref) {
-      this.id = id;
-      this.tag = tag;
-      this.ref = ref;
-      this.value = null;
-      this.parentTagName = null;
-      this.children = null;
-   }
+    fun getChildren(): List<GedcomTag?> = _children ?: emptyList<GedcomTag>()
 
-   public String getId() {
-      return id;
-   }
+    fun addChild(child: GedcomTag?) {
+        if (_children == null) {
+            _children = ArrayList()
+        }
+        _children!!.add(child)
+    }
 
-   public void setId(String id) {
-      this.id = id;
-   }
+    private fun getSortedChildren(children: List<GedcomTag?>): List<GedcomTag?> = children.sortedBy { it }
 
-   public String getTag() {
-      return tag;
-   }
+    val isEmpty: Boolean
+        get() = (id == null || id!!.isEmpty()) &&
+                (ref == null || ref!!.isEmpty()) &&
+                (parentTagName == null || parentTagName!!.isEmpty()) &&
+                (value == null || value!!.isEmpty()) &&
+                (_children == null || _children!!.size == 0)
 
-   public void setTag(String tag) {
-      this.tag = tag;
-   }
+    override fun equals(o: Any?): Boolean {
+        if (this === o) return true
+        if (o == null || javaClass != o.javaClass) return false
 
-   public String getRef() {
-      return ref;
-   }
+        val gt = o as GedcomTag
 
-   public void setRef(String ref) {
-      this.ref = ref;
-   }
+        if ((if (tag == null) "" else tag) != if (gt.tag == null) "" else gt.tag) {
+            return false
+        }
+        if ((if (id == null) "" else id) != if (gt.id == null) "" else gt.id) {
+            return false
+        }
+        if ((if (ref == null) "" else ref) != if (gt.ref == null) "" else gt.ref) {
+            return false
+        }
+        if ((if (parentTagName == null) "" else parentTagName) != if (gt.parentTagName == null) "" else gt.parentTagName) {
+            return false
+        }
+        if ((if (value == null) "" else value) != if (gt.value == null) "" else gt.value) {
+            return false
+        }
+        if (getChildren().size != gt.getChildren().size) {
+            return false
+        }
 
-   public String getParentTagName() {
-      return parentTagName;
-   }
+        // this is horribly inefficient - if we're going to do this a lot during production we need to rewrite it
+        // but as-is, it's convenient for debugging
+        val sortedChildren = getSortedChildren(getChildren())
+        val compareChildren = getSortedChildren(gt.getChildren())
 
-   public void setParentTagName(String parentTagName) {
-      this.parentTagName = parentTagName;
-   }
+        for (indx in sortedChildren.indices) {
+            if (sortedChildren[indx] != compareChildren[indx]) {
+                logger.info("!tag=" + sortedChildren[indx].toString() + "<=>" + compareChildren[indx].toString())
+                return false
+            }
+        }
+        return true
+    }
 
-   public String getValue() {
-      return value;
-   }
+    override fun hashCode(): Int {
+        var result = if (id != null && id!!.isNotEmpty()) id.hashCode() else 0
+        result = 31 * result + (if (tag != null && tag!!.isNotEmpty()) tag.hashCode() else 0)
+        result = 31 * result + (if (ref != null && ref!!.isNotEmpty()) ref.hashCode() else 0)
+        result =
+            31 * result + (if (parentTagName != null && parentTagName!!.isNotEmpty()) parentTagName.hashCode() else 0)
+        result = 31 * result + (if (value != null && value!!.isNotEmpty()) value.hashCode() else 0)
 
-   public void setValue(String value) {
-      this.value = value;
-   }
+        // Calculate the children hash code based on the actual value of each child hashcode
+        // result = 31 * result + (children != null ? children.hashCode() : 0);
+        if (_children != null) {
+            for (child in getSortedChildren(_children!!)) {
+                result = 31 * result + child.hashCode()
+            }
+        }
 
-   public void appendValue(String value) {
-      if (this.value == null) {
-         this.value = value;
-      } else {
-         this.value += value;
-      }
-   }
+        return result
+    }
 
-   public List<GedcomTag> getChildren() {
-      return children != null ? children : Collections.<GedcomTag>emptyList();
-   }
+    override fun toString(): String {
+        val buf = StringBuilder()
+        if (tag != null) {
+            buf.append(" tag:$tag")
+        }
+        if (id != null) {
+            buf.append(" id:$id")
+        }
+        if (ref != null) {
+            buf.append(" ref:$ref")
+        }
+        if (parentTagName != null) {
+            buf.append(" parentTag:$parentTagName")
+        }
+        if (value != null) {
+            buf.append(" value:$value")
+        }
+        if (_children != null) {
+            buf.append(" [")
+            for (child in getSortedChildren(_children!!)) {
+                buf.append(child.toString())
+            }
+            buf.append(" ]")
+        }
+        return buf.toString()
+    }
 
-   public void setChildren(List<GedcomTag> children) {
-      this.children = children;
-   }
+    override fun compareTo(tag: GedcomTag): Int {
+        var c =
+            (if (this.tag == null) "" else this.tag)!!.compareTo((if (tag.tag == null) "" else tag.tag)!!)
+        if (c != 0) return c
+        c = (if (id == null) "" else id)!!.compareTo((if (tag.id == null) "" else tag.id)!!)
+        if (c != 0) return c
+        c = (if (ref == null) "" else ref)!!.compareTo((if (tag.ref == null) "" else tag.ref)!!)
+        if (c != 0) return c
+        c =
+            (if (parentTagName == null) "" else parentTagName)!!.compareTo((if (tag.parentTagName == null) "" else tag.parentTagName)!!)
+        if (c != 0) return c
+        c =
+            (if (value == null) "" else value)!!.compareTo((if (tag.value == null) "" else tag.value)!!)
+        if (c != 0) return c
+        // compare hashcode because that compares children as well
+        return this.hashCode().compareTo(tag.hashCode())
+    }
 
-   public void addChild(GedcomTag child) {
-      if (children == null) {
-         children = new ArrayList<GedcomTag>();
-      }
-      children.add(child);
-   }
-
-   private ArrayList<GedcomTag> getSortedChildren(List<GedcomTag> children) {
-      ArrayList<GedcomTag> sortedChildren = new ArrayList<GedcomTag>(children.size());
-      sortedChildren.addAll(children);
-      Collections.sort(sortedChildren);
-      return sortedChildren;
-   }
-
-   public boolean isEmpty() {
-      return (id == null || id.length() == 0) &&
-             (ref == null || ref.length() == 0) &&
-             (parentTagName == null || parentTagName.length() == 0) &&
-             (value == null || value.length() == 0) &&
-             (children == null || children.size() == 0);
-   }
-
-   @Override
-   public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
-
-      GedcomTag gt = (GedcomTag) o;
-
-      if (!(tag == null ? "" : tag).equals(gt.tag == null ? "" : gt.tag)) {
-         return false;
-      }
-      if (!(id == null ? "" : id).equals(gt.id == null ? "" : gt.id)) {
-         return false;
-      }
-      if (!(ref == null ? "" : ref).equals(gt.ref == null ? "" : gt.ref)) {
-         return false;
-      }
-      if (!(parentTagName == null ? "" : parentTagName).equals(gt.parentTagName == null ? "" : gt.parentTagName)) {
-         return false;
-      }
-      if (!(value == null ? "" : value).equals(gt.value == null ? "" : gt.value)) {
-         return false;
-      }
-      if (getChildren().size() != gt.getChildren().size()) {
-         return false;
-      }
-
-      // this is horribly inefficient - if we're going to do this a lot during production we need to rewrite it
-      // but as-is, it's convenient for debugging
-      ArrayList<GedcomTag> sortedChildren = getSortedChildren(getChildren());
-      ArrayList<GedcomTag> compareChildren = getSortedChildren(gt.getChildren());
-
-      for (int indx = 0; indx < sortedChildren.size(); indx++) {
-         if (!sortedChildren.get(indx).equals(compareChildren.get(indx))) {
-            logger.info("!tag="+sortedChildren.get(indx).toString()+"<=>"+compareChildren.get(indx).toString());
-            return false;
-         }
-      }
-      return true;
-   }
-
-   @Override
-   public int hashCode() {
-      int result = id != null && id.length() > 0 ? id.hashCode() : 0;
-      result = 31 * result + (tag != null && tag.length() > 0 ? tag.hashCode() : 0);
-      result = 31 * result + (ref != null && ref.length() > 0 ? ref.hashCode() : 0);
-      result = 31 * result + (parentTagName != null && parentTagName.length() > 0 ? parentTagName.hashCode() : 0);
-      result = 31 * result + (value != null && value.length() > 0 ? value.hashCode() : 0);
-
-      // Calculate the children hash code based on the actual value of each child hashcode
-      // result = 31 * result + (children != null ? children.hashCode() : 0);
-      if (children != null) {
-         for (GedcomTag child : getSortedChildren(children)) {
-            result = 31 * result + child.hashCode();
-         }
-      }
-
-      return result;
-   }
-
-   @Override
-   public String toString() {
-      StringBuilder buf = new StringBuilder();
-      if (tag != null) {
-         buf.append(" tag:"+tag);
-      }
-      if (id != null) {
-         buf.append(" id:"+id);
-      }
-      if (ref != null) {
-         buf.append(" ref:"+ref);
-      }
-      if (parentTagName != null) {
-         buf.append(" parentTag:"+parentTagName);
-      }
-      if (value != null) {
-         buf.append(" value:"+value);
-      }
-      if (children != null) {
-         buf.append(" [");
-         for (GedcomTag child : getSortedChildren(children)) {
-            buf.append(child.toString());
-         }
-         buf.append(" ]");
-      }
-      return buf.toString();
-   }
-
-   public int compareTo(GedcomTag tag) {
-      int c = (getTag() == null ? "" : getTag()).compareTo(tag.getTag() == null ? "" : tag.getTag());
-      if (c != 0) return c;
-      c = (getId() == null ? "" : getId()).compareTo(tag.getId() == null ? "" : tag.getId());
-      if (c != 0) return c;
-      c = (getRef() == null ? "" : getRef()).compareTo(tag.getRef() == null ? "" : tag.getRef());
-      if (c != 0) return c;
-      c = (getParentTagName() == null ? "" : getParentTagName()).compareTo(tag.getParentTagName() == null ? "" : tag.getParentTagName());
-      if (c != 0) return c;
-      c = (getValue() == null ? "" : getValue()).compareTo(tag.getValue() == null ? "" : tag.getValue());
-      if (c != 0) return c;
-      // compare hashcode because that compares children as well
-      return new Integer(this.hashCode()).compareTo(new Integer(tag.hashCode()));
-   }
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger("org.folg.gedcom.model")
+    }
 }

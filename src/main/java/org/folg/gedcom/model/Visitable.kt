@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/25/11
  */
-public interface Visitable {
-   public void accept(Visitor visitor);
+interface Visitable {
+    fun accept(visitor: Visitor)
 }

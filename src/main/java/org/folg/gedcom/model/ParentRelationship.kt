@@ -13,34 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/27/11
- * 
+ *
  * add: Notes and Media, which aren't seen in gedcoms in the wild
  */
-public class ParentRelationship extends SourceCitationContainer {
-   private String value = null;
+class ParentRelationship : SourceCitationContainer() {
+    var value: String? = null
 
-   public String getValue() {
-      return value;
-   }
+    override fun accept(visitor: Visitor) {
+        throw RuntimeException("Not implemented - pass isFather")
+    }
 
-   public void setValue(String value) {
-      this.value = value;
-   }
-
-   public void accept(Visitor visitor) {
-      throw new RuntimeException("Not implemented - pass isFather");
-   }
-   
-   public void accept(Visitor visitor, boolean isFather) {
-      if (visitor.visit(this, isFather)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    fun accept(visitor: Visitor, isFather: Boolean) {
+        if (visitor.visit(this, isFather)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

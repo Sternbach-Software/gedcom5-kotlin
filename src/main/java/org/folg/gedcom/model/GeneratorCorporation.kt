@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
@@ -22,87 +21,23 @@ package org.folg.gedcom.model;
  *
  * add: Www
  */
-public class GeneratorCorporation extends ExtensionContainer {
-   private String value = null;
-   private Address addr = null;
-   private String phon = null;
-   private String _email = null;
-   private String emailTag = null;
-   private String fax = null;
-   private String _www = null;
-   private String wwwTag = null;
+class GeneratorCorporation : ExtensionContainer() {
+    var value: String? = null
+    var address: Address? = null
+    var phone: String? = null
+    var email: String? = null
+    var emailTag: String? = null
+    var fax: String? = null
+    var www: String? = null
+    var wwwTag: String? = null
 
-   public String getValue() {
-      return value;
-   }
-
-   public void setValue(String value) {
-      this.value = value;
-   }
-
-   public Address getAddress() {
-      return addr;
-   }
-
-   public void setAddress(Address addr) {
-      this.addr = addr;
-   }
-
-   public String getPhone() {
-      return phon;
-   }
-
-   public void setPhone(String phon) {
-      this.phon = phon;
-   }
-
-   public String getEmail() {
-      return _email;
-   }
-
-   public void setEmail(String email) {
-      this._email = email;
-   }
-
-   public String getEmailTag() {
-      return emailTag;
-   }
-
-   public void setEmailTag(String emailTag) {
-      this.emailTag = emailTag;
-   }
-
-   public String getFax() {
-      return fax;
-   }
-
-   public void setFax(String fax) {
-      this.fax = fax;
-   }
-
-   public String getWww() {
-      return _www;
-   }
-
-   public void setWww(String www) {
-      this._www = www;
-   }
-
-   public String getWwwTag() {
-      return wwwTag;
-   }
-
-   public void setWwwTag(String wwwTag) {
-      this.wwwTag = wwwTag;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         if (addr != null) {
-            addr.accept(visitor);
-         }
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            if (address != null) {
+                address!!.accept(visitor)
+            }
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

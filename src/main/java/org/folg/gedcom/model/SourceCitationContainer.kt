@@ -13,39 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/29/11
  */
-public abstract class SourceCitationContainer extends MediaContainer {
-   private List<SourceCitation> sourceCitations = null;
+abstract class SourceCitationContainer : MediaContainer() {
+    private var sourceCitations: MutableList<SourceCitation>? = null
 
-   public List<SourceCitation> getSourceCitations() {
-      return sourceCitations != null ? sourceCitations : Collections.<SourceCitation>emptyList();
-   }
+    fun getSourceCitations(): List<SourceCitation> {
+        return sourceCitations ?: emptyList()
+    }
 
-   public void setSourceCitations(List<SourceCitation> sourceCitations) {
-      this.sourceCitations = sourceCitations;
-   }
+    fun setSourceCitations(sourceCitations: MutableList<SourceCitation>?) {
+        this.sourceCitations = sourceCitations
+    }
 
-   public void addSourceCitation(SourceCitation sourceCitation) {
-      if (sourceCitations == null) {
-         sourceCitations = new ArrayList<SourceCitation>();
-      }
-      sourceCitations.add(sourceCitation);
-   }
+    fun addSourceCitation(sourceCitation: SourceCitation) {
+        if (sourceCitations == null) {
+            sourceCitations = ArrayList()
+        }
+        sourceCitations!!.add(sourceCitation)
+    }
 
-   public void visitContainedObjects(Visitor visitor) {
-      for (SourceCitation sourceCitation : getSourceCitations()) {
-         sourceCitation.accept(visitor);
-      }
-      super.visitContainedObjects(visitor);
-   }
+    override fun visitContainedObjects(visitor: Visitor) {
+        for (sourceCitation in getSourceCitations()) {
+            sourceCitation.accept(visitor)
+        }
+        super.visitContainedObjects(visitor)
+    }
 }

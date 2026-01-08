@@ -1,73 +1,75 @@
-package org.folg.gedcom.tools;
+package org.folg.gedcom.tools
 
-import org.folg.gedcom.model.*;
-import org.folg.gedcom.parser.ModelParser;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-import org.xml.sax.SAXParseException;
-
-import java.io.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.folg.gedcom.model.EventFact
+import org.folg.gedcom.model.Visitor
+import org.folg.gedcom.parser.ModelParser
+import org.kohsuke.args4j.CmdLineException
+import org.kohsuke.args4j.CmdLineParser
+import org.kohsuke.args4j.Option
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.xml.sax.SAXParseException
+import java.io.File
+import java.io.FileWriter
+import java.io.IOException
+import java.io.PrintWriter
 
 /**
  * User: dallan
  * Date: 1/7/12
  */
-public class PlaceWriter extends Visitor {
-   private static final Logger logger = LoggerFactory.getLogger("org.folg.gedcom.tools");
+class PlaceWriter : Visitor() {
+    @Option(name = "-i", required = true, usage = "file or directory containing gedcom files to process")
+    private val gedcomIn: File? = null
 
-   @Option(name="-i", required=true, usage="file or directory containing gedcom files to process")
-   private File gedcomIn;
+    @Option(name = "-o", required = true, usage = "target file for places")
+    private val placesOut: File? = null
 
-   @Option(name="-o", required=true, usage="target file for places")
-   private File placesOut;
+    private val parser = ModelParser()
+    private var out: PrintWriter? = null
 
-   private ModelParser parser;
-   private PrintWriter out;
+    override fun visit(eventFact: EventFact): Boolean {
+        val place = eventFact.place
+        if (place != null && place?.isNotEmpty() == true) {
+            out!!.println(place)
+        }
+        return true
+    }
 
-   public PlaceWriter() {
-      parser = new ModelParser();
-   }
+    @Throws(SAXParseException::class, IOException::class)
+    fun processGedcom(file: File?) {
+        val gedcom = parser.parseGedcom(file)
+        gedcom!!.accept(this)
+    }
 
-   @Override
-   public boolean visit(EventFact eventFact) {
-      String place = eventFact.getPlace();
-      if (place != null && place.length() > 0) {
-         out.println(place);
-      }
-      return true;
-   }
+    @Throws(IOException::class, SAXParseException::class)
+    private fun doMain() {
+        out = PrintWriter(FileWriter(placesOut))
+        if (gedcomIn!!.isDirectory) {
+            for (file in gedcomIn.listFiles()) {
+                processGedcom(file)
+            }
+        } else if (gedcomIn.isFile) {
+            processGedcom(gedcomIn)
+        }
+        out!!.close()
+    }
 
-   public void processGedcom(File file) throws SAXParseException, IOException {
-      Gedcom gedcom = parser.parseGedcom(file);
-      gedcom.accept(this);
-   }
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger("org.folg.gedcom.tools")
 
-   private void doMain() throws IOException, SAXParseException {
-      out = new PrintWriter(new FileWriter(placesOut));
-      if (gedcomIn.isDirectory()) {
-         for (File file : gedcomIn.listFiles()) {
-            processGedcom(file);
-         }
-      }
-      else if (gedcomIn.isFile()) {
-         processGedcom(gedcomIn);
-      }
-      out.close();
-   }
-
-   public static void main(String[] args) throws IOException, SAXParseException {
-      PlaceWriter self = new PlaceWriter();
-      CmdLineParser parser = new CmdLineParser(self);
-      try {
-         parser.parseArgument(args);
-         self.doMain();
-      }
-      catch (CmdLineException e) {
-         System.err.println(e.getMessage());
-         parser.printUsage(System.err);
-      }
-   }
+        @Throws(IOException::class, SAXParseException::class)
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val self = PlaceWriter()
+            val parser = CmdLineParser(self)
+            try {
+                parser.parseArgument(*args)
+                self.doMain()
+            } catch (e: CmdLineException) {
+                System.err.println(e.message)
+                parser.printUsage(System.err)
+            }
+        }
+    }
 }

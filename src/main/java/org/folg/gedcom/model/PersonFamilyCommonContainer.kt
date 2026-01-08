@@ -13,113 +13,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/28/11
  */
-public abstract class PersonFamilyCommonContainer extends SourceCitationContainer {
-   private List<EventFact> eventsFacts = null;
-   private List<LdsOrdinance> ldsOrdinances = null;
-   private List<String> refns = null;
-   private String rin = null;
-   private Change chan = null;
-   private String _uid = null;
-   private String uidTag = null;
+abstract class PersonFamilyCommonContainer : SourceCitationContainer() {
+    var _eventsFacts: MutableList<EventFact>? = null
+    var _ldsOrdinances: MutableList<LdsOrdinance>? = null
+    var _refns: MutableList<String>? = null
+    var rin: String? = null
+    var change: Change? = null
+    var uid: String? = null
+    var uidTag: String? = null
 
-   public List<EventFact> getEventsFacts() {
-      return eventsFacts != null ? eventsFacts : Collections.<EventFact>emptyList();
-   }
+    fun getEventsFacts(): List<EventFact> = _eventsFacts ?: emptyList()
 
-   public void setEventsFacts(List<EventFact> eventsFacts) {
-      this.eventsFacts = eventsFacts;
-   }
+    fun addEventFact(eventFact: EventFact) {
+        if (_eventsFacts == null) {
+            _eventsFacts = ArrayList()
+        }
+        _eventsFacts!!.add(eventFact)
+    }
 
-   public void addEventFact(EventFact eventFact) {
-      if (eventsFacts == null) {
-         eventsFacts = new ArrayList<EventFact>();
-      }
-      eventsFacts.add(eventFact);
-   }
+    fun getLdsOrdinances(): List<LdsOrdinance> = _ldsOrdinances ?: emptyList()
 
-   public List<LdsOrdinance> getLdsOrdinances() {
-      return ldsOrdinances != null ? ldsOrdinances : Collections.<LdsOrdinance>emptyList();
-   }
+    fun addLdsOrdinance(ldsOrdinance: LdsOrdinance) {
+        if (_ldsOrdinances == null) {
+            _ldsOrdinances = ArrayList()
+        }
+        _ldsOrdinances!!.add(ldsOrdinance)
+    }
 
-   public void setLdsOrdinances(List<LdsOrdinance> ldsOrdinances) {
-      this.ldsOrdinances = ldsOrdinances;
-   }
+    val referenceNumbers: List<String>
+        get() = _refns ?: emptyList()
 
-   public void addLdsOrdinance(LdsOrdinance ldsOrdinance) {
-      if (ldsOrdinances == null) {
-         ldsOrdinances = new ArrayList<LdsOrdinance>();
-      }
-      ldsOrdinances.add(ldsOrdinance);
-   }
+    fun addReferenceNumber(refn: String) {
+        if (_refns == null) {
+            _refns = ArrayList()
+        }
+        _refns!!.add(refn)
+    }
 
-   public List<String> getReferenceNumbers() {
-      return refns != null ? refns : Collections.<String>emptyList();
-   }
-
-   public void setReferenceNumbers(List<String> refns) {
-      this.refns = refns;
-   }
-
-   public void addReferenceNumber(String refn) {
-      if (refns == null) {
-         refns = new ArrayList<String>();
-      }
-      refns.add(refn);
-   }
-
-   public String getRin() {
-      return rin;
-   }
-
-   public void setRin(String rin) {
-      this.rin = rin;
-   }
-
-   public Change getChange() {
-      return chan;
-   }
-
-   public void setChange(Change chan) {
-      this.chan = chan;
-   }
-
-   public String getUid() {
-      return _uid;
-   }
-
-   public void setUid(String uid) {
-      this._uid = uid;
-   }
-
-   public String getUidTag() {
-      return uidTag;
-   }
-
-   public void setUidTag(String uidTag) {
-      this.uidTag = uidTag;
-   }
-
-   public void visitContainedObjects(Visitor visitor) {
-      for (EventFact eventFact : getEventsFacts()) {
-         eventFact.accept(visitor);
-      }
-      for (LdsOrdinance ldsOrdinance : getLdsOrdinances()) {
-         ldsOrdinance.accept(visitor);
-      }
-      if (chan != null) {
-         chan.accept(visitor);
-      }
-      super.visitContainedObjects(visitor);
-   }
+    override fun visitContainedObjects(visitor: Visitor) {
+        for (eventFact in getEventsFacts()) {
+            eventFact.accept(visitor)
+        }
+        for (ldsOrdinance in getLdsOrdinances()) {
+            ldsOrdinance.accept(visitor)
+        }
+        if (change != null) {
+            change!!.accept(visitor)
+        }
+        super.visitContainedObjects(visitor)
+    }
 }

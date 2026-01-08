@@ -13,79 +13,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.folg.gedcom.parser
 
-package org.folg.gedcom.parser;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException
 
 /**
  * User: Dallan
  * Date: 12/26/11
  */
-public class FieldRef {
-   private Object target;
-   private String name;
+class FieldRef(val target: Any?, val fieldName: String) {
+    val classFieldName: String
+        get() = target!!.javaClass.name + "." + fieldName
 
-   public FieldRef(Object target, String name) {
-      this.target = target;
-      this.name = name;
-   }
+    @get:Throws(NoSuchMethodException::class)
+    @set:Throws(NoSuchMethodException::class)
+    var value: String?
+        get() {
+            try {
+                val method = target!!.javaClass.getMethod("get" + fieldName)
+                return method.invoke(target) as String
+            } catch (e: InvocationTargetException) {
+                e.printStackTrace()
+                throw RuntimeException(e)
+            } catch (e: IllegalAccessException) {
+                e.printStackTrace()
+                throw RuntimeException(e)
+            }
+        }
+        set(value) {
+            try {
+                val method = target!!.javaClass.getMethod("set" + fieldName, String::class.java)
+                method.invoke(target, value)
+            } catch (e: InvocationTargetException) {
+                e.printStackTrace()
+                throw RuntimeException(e)
+            } catch (e: IllegalAccessException) {
+                e.printStackTrace()
+                throw RuntimeException(e)
+            }
+        }
 
-   public String getClassFieldName() {
-      return target.getClass().getName()+"."+name;
-   }
-
-   public Object getTarget() {
-      return target;
-   }
-
-   public String getFieldName() {
-      return name;
-   }
-
-   public void setValue(String value) throws NoSuchMethodException {
-      try {
-         Method method = target.getClass().getMethod("set"+name, String.class);
-         method.invoke(target, value);
-      } catch (InvocationTargetException e) {
-         e.printStackTrace();
-         throw new RuntimeException(e);
-      } catch (IllegalAccessException e) {
-         e.printStackTrace();
-         throw new RuntimeException(e);
-      }
-   }
-
-   public String getValue() throws NoSuchMethodException {
-      try {
-         Method method = target.getClass().getMethod("get"+name);
-         return (String)method.invoke(target);
-      } catch (InvocationTargetException e) {
-         e.printStackTrace();
-         throw new RuntimeException(e);
-      } catch (IllegalAccessException e) {
-         e.printStackTrace();
-         throw new RuntimeException(e);
-      }
-   }
-
-   public void appendValue(String value) throws NoSuchMethodException {
-      try {
-         String currentValue = getValue();
-         setValue((currentValue == null ? "" : currentValue) + value);
-      } catch (NoSuchMethodException e) {
-         // try "add"
-         try {
-            Method method = target.getClass().getMethod("add"+name, String.class);
-            method.invoke(target, value);
-         } catch (InvocationTargetException e1) {
-            e1.printStackTrace();
-            throw new RuntimeException(e);
-         } catch (IllegalAccessException e1) {
-            e1.printStackTrace();
-            throw new RuntimeException(e);
-         }
-      }
-   }
+    @Throws(NoSuchMethodException::class)
+    fun appendValue(value: String) {
+        try {
+            val currentValue = this.value
+            this.value = (currentValue ?: "") + value
+        } catch (e: NoSuchMethodException) {
+            // try "add"
+            try {
+                val method = target!!.javaClass.getMethod("add" + fieldName, String::class.java)
+                method.invoke(target, value)
+            } catch (e1: InvocationTargetException) {
+                e1.printStackTrace()
+                throw RuntimeException(e)
+            } catch (e1: IllegalAccessException) {
+                e1.printStackTrace()
+                throw RuntimeException(e)
+            }
+        }
+    }
 }

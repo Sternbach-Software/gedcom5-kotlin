@@ -13,50 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: dallan
  * Date: 1/3/12
  */
-public class Association extends ExtensionContainer {
-   private String ref = null;
-   private String type = null;
-   private String rela = null;
+class Association : ExtensionContainer() {
+    var ref: String? = null
+    var type: String? = null
+    var relation: String? = null
 
-   public String getRef() {
-      return ref;
-   }
+    fun getPerson(gedcom: Gedcom): Person? {
+        return gedcom.getPerson(ref)
+    }
 
-   public void setRef(String ref) {
-      this.ref = ref;
-   }
-
-   public Person getPerson(Gedcom gedcom) {
-      return gedcom.getPerson(ref);
-   }
-
-   public String getType() {
-      return type;
-   }
-
-   public void setType(String type) {
-      this.type = type;
-   }
-
-   public String getRelation() {
-      return rela;
-   }
-
-   public void setRelation(String rela) {
-      this.rela = rela;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

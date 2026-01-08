@@ -13,37 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/28/11
  */
-public class SpouseFamilyRef extends ExtensionContainer {
-   private String ref;
+open class SpouseFamilyRef : ExtensionContainer() {
+    var ref: String? = null
 
-   public String getRef() {
-      return ref;
-   }
+    /**
+     * Convenience function to dereference family
+     * @param gedcom Gedcom
+     * @return referenced family
+     */
+    fun getFamily(gedcom: Gedcom): Family? {
+        return gedcom.getFamily(ref)
+    }
 
-   public void setRef(String ref) {
-      this.ref = ref;
-   }
-
-   /**
-    * Convenience function to dereference family
-    * @param gedcom Gedcom
-    * @return referenced family
-    */
-   public Family getFamily(Gedcom gedcom) {
-      return gedcom.getFamily(ref);
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

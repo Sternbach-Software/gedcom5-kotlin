@@ -13,47 +13,142 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/25/11
- * 
- *  If you override these functions, return false if you don't want to visit an object's children
+ *
+ * If you override these functions, return false if you don't want to visit an object's children
  */
-public class Visitor {
-   public boolean visit(Address address) {return true;}
-   public boolean visit(Association association) {return true;}
-   public boolean visit(Change change) {return true;}
-   public boolean visit(CharacterSet characterSet) {return true;}
-   public boolean visit(ChildRef childRef) {return true;}
-   public boolean visit(DateTime dateTime) {return true;}
-   public boolean visit(EventFact eventFact) {return true;}
-   public boolean visit(String extensionKey, Object extension) {return true;}
-   public boolean visit(Family family) {return true;}
-   public boolean visit(Gedcom gedcom) {return true;}
-   public boolean visit(GedcomVersion gedcomVersion) {return true;}
-   public boolean visit(Generator generator) {return true;}
-   public boolean visit(GeneratorCorporation generatorCorporation) {return true;}
-   public boolean visit(GeneratorData generatorData) {return true;}
-   public boolean visit(Header header) {return true;}
-   public boolean visit(LdsOrdinance ldsOrdinance) {return true;}
-   public boolean visit(Media media) {return true;}
-   public boolean visit(MediaRef mediaRef) {return true;}
-   public boolean visit(Name name) {return true;}
-   public boolean visit(Note note) {return true;}
-   public boolean visit(NoteRef noteRef) {return true;}
-   public boolean visit(ParentFamilyRef parentFamilyRef) {return true;}
-   public boolean visit(ParentRelationship parentRelationship, boolean isFather) {return true;}
-   public boolean visit(Person person) {return true;}
-   public boolean visit(Repository repository) {return true;}
-   public boolean visit(RepositoryRef repositoryRef) {return true;}
-   public boolean visit(Source source) {return true;}
-   public boolean visit(SourceCitation sourceCitation) {return true;}
-   public boolean visit(SpouseRef spouseRef, boolean isHusband) {return true;}
-   public boolean visit(SpouseFamilyRef spouseFamilyRef) {return true;}
-   public boolean visit(Submission submission) {return true;}
-   public boolean visit(Submitter submitter) {return true;}
-   public void endVisit(ExtensionContainer obj) {}
+open class Visitor {
+    open fun visit(address: Address): Boolean {
+        return true
+    }
+
+    open fun visit(association: Association): Boolean {
+        return true
+    }
+
+    open fun visit(change: Change?): Boolean {
+        return true
+    }
+
+    open fun visit(characterSet: CharacterSet): Boolean {
+        return true
+    }
+
+    open fun visit(childRef: ChildRef): Boolean {
+        return true
+    }
+
+    open fun visit(dateTime: DateTime): Boolean {
+        return true
+    }
+
+    open fun visit(eventFact: EventFact): Boolean {
+        return true
+    }
+
+    open fun visit(extensionKey: String?, extension: Any?): Boolean {
+        return true
+    }
+
+    open fun visit(family: Family): Boolean {
+        return true
+    }
+
+    open fun visit(gedcom: Gedcom?): Boolean {
+        return true
+    }
+
+    open fun visit(gedcomVersion: GedcomVersion): Boolean {
+        return true
+    }
+
+    open fun visit(generator: Generator): Boolean {
+        return true
+    }
+
+    open fun visit(generatorCorporation: GeneratorCorporation): Boolean {
+        return true
+    }
+
+    open fun visit(generatorData: GeneratorData): Boolean {
+        return true
+    }
+
+    open fun visit(header: Header): Boolean {
+        return true
+    }
+
+    open fun visit(ldsOrdinance: LdsOrdinance): Boolean {
+        return true
+    }
+
+    open fun visit(media: Media): Boolean {
+        return true
+    }
+
+    open fun visit(mediaRef: MediaRef): Boolean {
+        return true
+    }
+
+    open fun visit(name: Name): Boolean {
+        return true
+    }
+
+    open fun visit(note: Note): Boolean {
+        return true
+    }
+
+    open fun visit(noteRef: NoteRef): Boolean {
+        return true
+    }
+
+    open fun visit(parentFamilyRef: ParentFamilyRef): Boolean {
+        return true
+    }
+
+    open fun visit(parentRelationship: ParentRelationship, isFather: Boolean): Boolean {
+        return true
+    }
+
+    open fun visit(person: Person): Boolean {
+        return true
+    }
+
+    open fun visit(repository: Repository): Boolean {
+        return true
+    }
+
+    open fun visit(repositoryRef: RepositoryRef): Boolean {
+        return true
+    }
+
+    open fun visit(source: Source): Boolean {
+        return true
+    }
+
+    open fun visit(sourceCitation: SourceCitation): Boolean {
+        return true
+    }
+
+    open fun visit(spouseRef: SpouseRef, isHusband: Boolean): Boolean {
+        return true
+    }
+
+    open fun visit(spouseFamilyRef: SpouseFamilyRef): Boolean {
+        return true
+    }
+
+    open fun visit(submission: Submission): Boolean {
+        return true
+    }
+
+    open fun visit(submitter: Submitter): Boolean {
+        return true
+    }
+
+    open fun endVisit(obj: ExtensionContainer?) {}
 }

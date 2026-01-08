@@ -13,343 +13,351 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.folg.gedcom.model
 
-package org.folg.gedcom.model;
-
-import java.util.*;
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 
 /**
  * User: Dallan
  * Date: 12/24/11
  */
-public class Gedcom extends ExtensionContainer {
-    private Header head = null;
-    private List<Submitter> subms = null;
-    private Submission subn = null;
-    private List<Person> people = null;
-    private List<Family> families = null;
-    private List<Media> media = null;
-    private List<Note> notes = null;
-    private List<Source> sources = null;
-    private List<Repository> repositories = null;
+class Gedcom : ExtensionContainer() {
+    var header: Header? = null
+    private var subms: MutableList<Submitter>? = null
+    private var subn: Submission? = null
+    private var people: MutableList<Person>? = null
+    private var families: MutableList<Family>? = null
+    private var media: MutableList<Media>? = null
+    private var notes: MutableList<Note>? = null
+    private var sources: MutableList<Source>? = null
+    private var repositories: MutableList<Repository>? = null
 
-    private transient Map<String, Person> personIndex;
-    private transient Map<String, Family> familyIndex;
-    private transient Map<String, Media> mediaIndex;
-    private transient Map<String, Note> noteIndex;
-    private transient Map<String, Source> sourceIndex;
-    private transient Map<String, Repository> repositoryIndex;
-    private transient Map<String, Submitter> submitterIndex;
+    @Transient
+    private var personIndex: MutableMap<String?, Person>? = null
 
-    public Header getHeader() {
-        return head;
+    @Transient
+    private var familyIndex: MutableMap<String?, Family>? = null
+
+    @Transient
+    private var mediaIndex: MutableMap<String?, Media>? = null
+
+    @Transient
+    private var noteIndex: MutableMap<String?, Note>? = null
+
+    @Transient
+    private var sourceIndex: MutableMap<String?, Source>? = null
+
+    @Transient
+    private var repositoryIndex: MutableMap<String?, Repository>? = null
+
+    @Transient
+    private var submitterIndex: MutableMap<String?, Submitter>? = null
+
+    fun getPeople(): List<Person> {
+        return people ?: emptyList()
     }
 
-    public void setHeader(Header head) {
-        this.head = head;
+    fun getPerson(id: String?): Person? {
+        return personIndex!![id]
     }
 
-    public List<Person> getPeople() {
-        return people != null ? people : Collections.<Person>emptyList();
+    fun setPeople(people: MutableList<Person>?) {
+        this.people = people
     }
 
-    public Person getPerson(String id) {
-        return personIndex.get(id);
-    }
-
-    public void setPeople(List<Person> people) {
-        this.people = people;
-    }
-
-    public void addPerson(Person person) {
+    fun addPerson(person: Person) {
         if (people == null) {
-            people = new ArrayList<Person>();
+            people = ArrayList()
         }
-        people.add(person);
+        people!!.add(person)
         if (personIndex != null) {
-            personIndex.put(person.getId(), person);
+            personIndex!![person.id] = person
         }
     }
 
-    public List<Family> getFamilies() {
-        return families != null ? families : Collections.<Family>emptyList();
+    fun getFamilies(): List<Family> {
+        return families ?: emptyList()
     }
 
-    public Family getFamily(String id) {
-        return familyIndex.get(id);
+    fun getFamily(id: String?): Family? {
+        return familyIndex!![id]
     }
 
-    public void setFamilies(List<Family> families) {
-        this.families = families;
+    fun setFamilies(families: MutableList<Family>?) {
+        this.families = families
     }
 
-    public void addFamily(Family family) {
+    fun addFamily(family: Family) {
         if (families == null) {
-            families = new ArrayList<Family>();
+            families = ArrayList()
         }
-        families.add(family);
+        families!!.add(family)
         if (familyIndex != null) {
-            familyIndex.put(family.getId(), family);
+            familyIndex!![family.id] = family
         }
     }
 
-    public List<Media> getMedia() {
-        return media != null ? media : Collections.<Media>emptyList();
+    fun getMedia(): List<Media> {
+        return media ?: emptyList()
     }
 
-    public Media getMedia(String id) {
-        return mediaIndex.get(id);
+    fun getMedia(id: String?): Media? {
+        return mediaIndex!![id]
     }
 
-    public void setMedia(List<Media> media) {
-        this.media = media;
+    fun setMedia(media: MutableList<Media>?) {
+        this.media = media
     }
 
-    public void addMedia(Media m) {
+    fun addMedia(m: Media) {
         if (media == null) {
-            media = new ArrayList<Media>();
+            media = ArrayList()
         }
-        media.add(m);
+        media!!.add(m)
         if (mediaIndex != null) {
-            mediaIndex.put(m.getId(), m);
+            mediaIndex!![m.id] = m
         }
     }
 
-    public List<Note> getNotes() {
-        return notes != null ? notes : Collections.<Note>emptyList();
+    fun getNotes(): List<Note> {
+        return notes ?: emptyList()
     }
 
-    public Note getNote(String id) {
-        return noteIndex.get(id);
+    fun getNote(id: String?): Note? {
+        return noteIndex!![id]
     }
 
-    public void setNotes(List<Note> notes) {
-        this.notes = notes;
+    fun setNotes(notes: MutableList<Note>?) {
+        this.notes = notes
     }
 
-    public void addNote(Note note) {
+    fun addNote(note: Note) {
         if (notes == null) {
-            notes = new ArrayList<Note>();
+            notes = ArrayList()
         }
-        notes.add(note);
+        notes!!.add(note)
         if (noteIndex != null) {
-            noteIndex.put(note.getId(), note);
+            noteIndex!![note.id] = note
         }
     }
 
-    public List<Source> getSources() {
-        return sources != null ? sources : Collections.<Source>emptyList();
+    fun getSources(): List<Source> {
+        return sources ?: emptyList()
     }
 
-    public Source getSource(String id) {
-        return sourceIndex.get(id);
+    fun getSource(id: String?): Source? {
+        return sourceIndex!![id]
     }
 
-    public void setSources(List<Source> sources) {
-        this.sources = sources;
+    fun setSources(sources: MutableList<Source>?) {
+        this.sources = sources
     }
 
-    public void addSource(Source source) {
+    fun addSource(source: Source) {
         if (sources == null) {
-            sources = new ArrayList<Source>();
+            sources = ArrayList()
         }
-        sources.add(source);
+        sources!!.add(source)
         if (sourceIndex != null) {
-            sourceIndex.put(source.getId(), source);
+            sourceIndex!![source.id] = source
         }
     }
 
-    public List<Repository> getRepositories() {
-        return repositories != null ? repositories : Collections.<Repository>emptyList();
+    fun getRepositories(): List<Repository> {
+        return repositories ?: emptyList()
     }
 
-    public Repository getRepository(String id) {
-        return repositoryIndex.get(id);
+    fun getRepository(id: String?): Repository? {
+        return repositoryIndex!![id]
     }
 
-    public void setRepositories(List<Repository> repositories) {
-        this.repositories = repositories;
+    fun setRepositories(repositories: MutableList<Repository>?) {
+        this.repositories = repositories
     }
 
-    public void addRepository(Repository repository) {
+    fun addRepository(repository: Repository) {
         if (repositories == null) {
-            repositories = new ArrayList<Repository>();
+            repositories = ArrayList()
         }
-        repositories.add(repository);
+        repositories!!.add(repository)
         if (repositoryIndex != null) {
-            repositoryIndex.put(repository.getId(), repository);
+            repositoryIndex!![repository.id] = repository
         }
     }
 
-    public Submitter getSubmitter(String id) {
-        return submitterIndex.get(id);
+    fun getSubmitter(id: String?): Submitter? {
+        return submitterIndex!![id]
     }
 
-    public List<Submitter> getSubmitters() {
-        return subms != null ? subms : Collections.<Submitter>emptyList();
+    val submitters: List<Submitter>
+        get() = subms ?: emptyList()
+
+    fun setSubmitters(submitters: MutableList<Submitter>?) {
+        this.subms = submitters
     }
 
-    public void setSubmitters(List<Submitter> submitters) {
-        this.subms = submitters;
-    }
-
-    public void addSubmitter(Submitter submitter) {
+    fun addSubmitter(submitter: Submitter) {
         if (subms == null) {
-            subms = new ArrayList<Submitter>();
+            subms = ArrayList()
         }
-        subms.add(submitter);
+        subms!!.add(submitter)
 
         if (submitterIndex != null) {
-            submitterIndex.put(submitter.getId(), submitter);
+            submitterIndex!![submitter.id] = submitter
         }
     }
 
-    /**
-     * Use this function in place of Header.getSubmission
-     *
-     * @return Submission top-level record or from header
-     */
-    public Submission getSubmission() {
-        if (subn != null) {
-            return subn;
-        } else if (head != null) {
-            return head.getSubmission();
+    var submission: Submission?
+        /**
+         * Use this function in place of Header.getSubmission
+         *
+         * @return Submission top-level record or from header
+         */
+        get() {
+            if (subn != null) {
+                return subn
+            } else if (header != null) {
+                return header?.submission
+            }
+            return null
         }
-        return null;
-    }
+        set(subn) {
+            this.subn = subn
+        }
 
-    public void setSubmission(Submission subn) {
-        this.subn = subn;
-    }
-
-    public void updateReferences() {
-        for (Person person : getPeople()) {
-            for (SpouseFamilyRef spouseRef : person.getSpouseFamilyRefs()) {
-                Family family = getFamily(spouseRef.getRef());
-                boolean spouseRefInHusbands = family.getHusbandRefs().stream().anyMatch(ref -> ref.getRef().equals(person.getId()));
-                boolean spouseRefInWives = family.getWifeRefs().stream().anyMatch(ref -> ref.getRef().equals(person.getId()));
+    fun updateReferences() {
+        for (person in getPeople()) {
+            for (spouseRef in person.spouseFamilyRefs) {
+                val family = getFamily(spouseRef?.ref)
+                val spouseRefInHusbands =
+                    family!!._husbandRefs?.stream()?.anyMatch { ref: SpouseRef? -> ref?.ref == person.id } ?: false
+                val spouseRefInWives =
+                    family._wifeRefs?.stream()?.anyMatch { ref: SpouseRef? -> ref?.ref == person.id } ?: false
                 if (!spouseRefInHusbands && !spouseRefInWives) {
-                    Optional<EventFact> fact = person.getEventsFacts().stream().filter(event -> event.getTag().equals("SEX")).findFirst();
-                    SpouseRef ref = new SpouseRef();
-                    ref.setRef(person.getId());
+                    val fact = person._eventsFacts?.stream()?.filter { event: EventFact -> event.tag == "SEX" }?.findFirst() ?: Optional.empty()
+                    val ref = SpouseRef()
+                    ref.ref = person.id
 
-                    if (fact.isPresent() && fact.get().getValue().equals("F")) {
-                        family.addWife(ref);
+                    if (fact.isPresent && fact.get().value == "F") {
+                        family.addWife(ref)
                     } else {
-                        family.addHusband(ref);
+                        family.addHusband(ref)
                     }
                 }
             }
 
-            for (ParentFamilyRef parentRef : person.getParentFamilyRefs()) {
-                Family family = getFamily(parentRef.getRef());
-                boolean containsReference = family.getChildRefs().stream().anyMatch(ref -> ref.getRef().equals(person.getId()));
-                if (!containsReference) {
-                    ChildRef ref = new ChildRef();
-                    ref.setRef(person.getId());
-                    family.addChild(ref);
+            for (parentRef in person.parentFamilyRefs) {
+                val family = getFamily(parentRef?.ref)
+                val containsReference =
+                    family!!._childRefs?.stream()?.anyMatch { ref: ChildRef? -> ref?.ref == person.id }
+                if (containsReference == false) {
+                    val ref = ChildRef()
+                    ref.ref = person.id
+                    family.addChild(ref)
                 }
             }
         }
 
-        for (Family family : getFamilies()) {
-            for (SpouseRef ref : family.getHusbandRefs()) {
-                Person person = getPerson(ref.getRef());
-                boolean containsRef = person.getSpouseFamilyRefs().stream()
-                        .anyMatch(spouseFamilyRef -> spouseFamilyRef.getRef().equals(family.getId()));
-                if (!containsRef) {
-                    SpouseFamilyRef spouseFamilyRef = new SpouseFamilyRef();
-                    spouseFamilyRef.setRef(family.getId());
-                    person.addSpouseFamilyRef(spouseFamilyRef);
+        for (family in getFamilies()) {
+            for (ref in family._husbandRefs ?: emptyList()) {
+                val person = getPerson(ref?.ref)
+                val containsRef = person?.spouseFamilyRefs?.stream()
+                    ?.anyMatch { spouseFamilyRef: SpouseFamilyRef? -> spouseFamilyRef?.ref == family.id }
+                if (containsRef == false) {
+                    val spouseFamilyRef = SpouseFamilyRef()
+                    spouseFamilyRef.ref = family.id
+                    person!!.addSpouseFamilyRef(spouseFamilyRef)
                 }
             }
-           for (SpouseRef ref : family.getWifeRefs()) {
-              Person person = getPerson(ref.getRef());
-              boolean containsRef = person.getSpouseFamilyRefs().stream()
-                      .anyMatch(spouseFamilyRef -> spouseFamilyRef.getRef().equals(family.getId()));
-              if (!containsRef) {
-                 SpouseFamilyRef spouseFamilyRef = new SpouseFamilyRef();
-                 spouseFamilyRef.setRef(family.getId());
-                 person.addSpouseFamilyRef(spouseFamilyRef);
-              }
-           }
+            for (ref in family._wifeRefs ?: emptyList()) {
+                val person = getPerson(ref?.ref)
+                val containsRef = person?.spouseFamilyRefs?.stream()
+                    ?.anyMatch { spouseFamilyRef: SpouseFamilyRef? -> spouseFamilyRef?.ref == family.id }
+                if (containsRef == false) {
+                    val spouseFamilyRef = SpouseFamilyRef()
+                    spouseFamilyRef.ref = family.id
+                    person!!.addSpouseFamilyRef(spouseFamilyRef)
+                }
+            }
 
-           for (ChildRef ref : family.getChildRefs()) {
-              Person person = getPerson(ref.getRef());
-              boolean containsRef = person.getParentFamilyRefs().stream()
-                      .anyMatch(parentFamilyRef -> parentFamilyRef.getRef().equals(family.getId()));
-              if (!containsRef) {
-                 ParentFamilyRef spouseFamilyRef = new ParentFamilyRef();
-                 spouseFamilyRef.setRef(family.getId());
-                 person.addParentFamilyRef(spouseFamilyRef);
-              }
-           }
+            for (ref in family._childRefs ?: emptyList()) {
+                val person = getPerson(ref?.ref)
+                val containsRef = person?.parentFamilyRefs?.stream()
+                    ?.anyMatch { parentFamilyRef: ParentFamilyRef? -> parentFamilyRef?.ref == family.id }
+                if (containsRef == false) {
+                    val spouseFamilyRef = ParentFamilyRef()
+                    spouseFamilyRef.ref = family.id
+                    person.addParentFamilyRef(spouseFamilyRef)
+                }
+            }
         }
     }
 
-    public void createIndexes() {
-        personIndex = new HashMap<String, Person>();
-        for (Person person : getPeople()) {
-            personIndex.put(person.getId(), person);
+    fun createIndexes() {
+        personIndex = HashMap()
+        for (person in getPeople()) {
+            personIndex!![person.id] = person
         }
-        familyIndex = new HashMap<String, Family>();
-        for (Family family : getFamilies()) {
-            familyIndex.put(family.getId(), family);
+        familyIndex = HashMap()
+        for (family in getFamilies()) {
+            familyIndex!![family.id] = family
         }
-        mediaIndex = new HashMap<String, Media>();
-        for (Media m : getMedia()) {
-            mediaIndex.put(m.getId(), m);
+        mediaIndex = HashMap()
+        for (m in getMedia()) {
+            mediaIndex!![m.id] = m
         }
-        noteIndex = new HashMap<String, Note>();
-        for (Note note : getNotes()) {
-            noteIndex.put(note.getId(), note);
+        noteIndex = HashMap()
+        for (note in getNotes()) {
+            noteIndex!![note.id] = note
         }
-        sourceIndex = new HashMap<String, Source>();
-        for (Source source : getSources()) {
-            sourceIndex.put(source.getId(), source);
+        sourceIndex = HashMap()
+        for (source in getSources()) {
+            sourceIndex!![source.id] = source
         }
-        repositoryIndex = new HashMap<String, Repository>();
-        for (Repository repository : getRepositories()) {
-            repositoryIndex.put(repository.getId(), repository);
+        repositoryIndex = HashMap()
+        for (repository in getRepositories()) {
+            repositoryIndex!![repository.id] = repository
         }
 
-        submitterIndex = new HashMap<String, Submitter>();
-        for (Submitter submitter : getSubmitters()) {
-            submitterIndex.put(submitter.getId(), submitter);
+        submitterIndex = HashMap()
+        for (submitter in submitters) {
+            submitterIndex!![submitter.id] = submitter
         }
     }
 
-    public void accept(Visitor visitor) {
+    override fun accept(visitor: Visitor) {
         if (visitor.visit(this)) {
-            if (head != null) {
-                head.accept(visitor);
+            if (header != null) {
+                header!!.accept(visitor)
             }
-            for (Submitter submitter : getSubmitters()) {
-                submitter.accept(visitor);
+            for (submitter in submitters) {
+                submitter.accept(visitor)
             }
             if (subn != null) {
-                subn.accept(visitor);
+                subn!!.accept(visitor)
             }
-            for (Person person : getPeople()) {
-                person.accept(visitor);
+            for (person in getPeople()) {
+                person.accept(visitor)
             }
-            for (Family family : getFamilies()) {
-                family.accept(visitor);
+            for (family in getFamilies()) {
+                family.accept(visitor)
             }
-            for (Media media : getMedia()) {
-                media.accept(visitor);
+            for (media in getMedia()) {
+                media.accept(visitor)
             }
-            for (Note note : getNotes()) {
-                note.accept(visitor);
+            for (note in getNotes()) {
+                note.accept(visitor)
             }
-            for (Source source : getSources()) {
-                source.accept(visitor);
+            for (source in getSources()) {
+                source.accept(visitor)
             }
-            for (Repository repository : getRepositories()) {
-                repository.accept(visitor);
+            for (repository in getRepositories()) {
+                repository.accept(visitor)
             }
-            super.visitContainedObjects(visitor);
-            visitor.endVisit(this);
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
         }
     }
 }

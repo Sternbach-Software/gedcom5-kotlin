@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
@@ -22,39 +21,15 @@ package org.folg.gedcom.model;
  *
  * omit: submitter, famf, temp, ance, rin
  */
-public class Submission extends ExtensionContainer {
-   private String id = null;
-   private String desc = null;
-   private String ordi = null;
+class Submission : ExtensionContainer() {
+    var id: String? = null
+    var description: String? = null
+    var ordinanceFlag: String? = null
 
-   public String getId() {
-      return id;
-   }
-
-   public void setId(String id) {
-      this.id = id;
-   }
-
-   public String getDescription() {
-      return desc;
-   }
-
-   public void setDescription(String desc) {
-      this.desc = desc;
-   }
-
-   public String getOrdinanceFlag() {
-      return ordi;
-   }
-
-   public void setOrdinanceFlag(String ordi) {
-      this.ordi = ordi;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

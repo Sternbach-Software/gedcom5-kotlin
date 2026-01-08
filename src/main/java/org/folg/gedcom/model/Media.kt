@@ -13,124 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/27/11
- * 
+ *
  * omit: Linked objects, Reference number, Rin
  * add: File, primary, type, scrapbook, slideshow
  */
-public class Media extends NoteContainer {
-   private String id = null;
-   private String form = null;
-   private String titl = null;
-   private String blob = null;
-   private Change chan = null;
-   private String _file = null;
-   private String fileTag = null;
-   private String _prim = null;
-   private String _type = null;
-   private String _scbk = null;
-   private String _sshow = null;
+class Media : NoteContainer() {
+    var id: String? = null
+    var format: String? = null
+    var title: String? = null
+    var blob: String? = null
+    var change: Change? = null
+    var file: String? = null
+    var fileTag: String? = null
+    var primary: String? = null
+    var type: String? = null
+    var scrapbook: String? = null
+    var slideShow: String? = null
 
-   public String getId() {
-      return id;
-   }
-
-   public void setId(String id) {
-      this.id = id;
-   }
-
-   public String getFormat() {
-      return form;
-   }
-
-   public void setFormat(String form) {
-      this.form = form;
-   }
-
-   public String getTitle() {
-      return titl;
-   }
-
-   public void setTitle(String titl) {
-      this.titl = titl;
-   }
-
-   public String getBlob() {
-      return blob;
-   }
-
-   public void setBlob(String blob) {
-      this.blob = blob;
-   }
-
-   public Change getChange() {
-      return chan;
-   }
-
-   public void setChange(Change chan) {
-      this.chan = chan;
-   }
-
-   public String getFile() {
-      return _file;
-   }
-
-   public void setFile(String _file) {
-      this._file = _file;
-   }
-
-   public String getFileTag() {
-      return fileTag;
-   }
-
-   public void setFileTag(String fileTag) {
-      this.fileTag = fileTag;
-   }
-
-   public String getPrimary() {
-      return _prim;
-   }
-
-   public void setPrimary(String prim) {
-      this._prim = prim;
-   }
-
-   public String getType() {
-      return _type;
-   }
-
-   public void setType(String type) {
-      this._type = type;
-   }
-
-   public String getScrapbook() {
-      return _scbk;
-   }
-
-   public void setScrapbook(String scbk) {
-      this._scbk = scbk;
-   }
-
-   public String getSlideShow() {
-      return _sshow;
-   }
-
-   public void setSlideShow(String sshow) {
-      this._sshow = sshow;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         if (chan != null) {
-            chan.accept(visitor);
-         }
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            if (change != null) {
+                change!!.accept(visitor)
+            }
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

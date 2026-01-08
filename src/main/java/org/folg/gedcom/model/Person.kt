@@ -13,12 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
@@ -28,219 +23,128 @@ import java.util.List;
  * add: Uid, Address, phone, email, title (is a Name)
  * change: alia from xref to Name
  */
-public class Person extends PersonFamilyCommonContainer {
-   private String id = null;
-   private List<Name> names = null;
-   private List<ParentFamilyRef> famc = null;
-   private List<SpouseFamilyRef> fams = null;
-   private List<Association> assos = null;
-   private String anci = null;
-   private String desi = null;
-   private String rfn = null;
-   private Address addr = null;
-   private String phon = null;
-   private String fax = null;
-   private String email = null;
-   private String emailTag = null;
-   private String _www = null;
-   private String wwwTag = null;
+class Person : PersonFamilyCommonContainer() {
+    var id: String? = null
+    private var names: MutableList<Name>? = null
+    private var famc: MutableList<ParentFamilyRef?>? = null
+    private var fams: MutableList<SpouseFamilyRef?>? = null
+    private var assos: MutableList<Association>? = null
+    var ancestorInterestSubmitterRef: String? = null
+    var descendantInterestSubmitterRef: String? = null
+    var recordFileNumber: String? = null
+    var address: Address? = null
+    var phone: String? = null
+    var fax: String? = null
+    var email: String? = null
+    var emailTag: String? = null
+    var www: String? = null
+    var wwwTag: String? = null
 
-  public String getId() {
-      return id;
-   }
+    fun getNames(): List<Name> {
+        return names ?: emptyList()
+    }
 
-   public void setId(String id) {
-      this.id = id;
-   }
+    fun setNames(names: MutableList<Name>?) {
+        this.names = names
+    }
 
-   public List<Name> getNames() {
-      return names != null ? names : Collections.<Name>emptyList();
-   }
+    fun addName(name: Name) {
+        if (names == null) {
+            names = ArrayList()
+        }
+        names!!.add(name)
+    }
 
-   public void setNames(List<Name> names) {
-      this.names = names;
-   }
+    private fun getFamilies(gedcom: Gedcom, familyRefs: List<SpouseFamilyRef?>): List<Family> {
+        val families: MutableList<Family> = ArrayList()
+        for (familyRef in familyRefs) {
+            val family = familyRef!!.getFamily(gedcom)
+            if (family != null) {
+                families.add(family)
+            }
+        }
+        return families
+    }
 
-   public void addName(Name name) {
-      if (names == null) {
-         names = new ArrayList<Name>();
-      }
-      names.add(name);
-   }
-   
-   private List<Family> getFamilies(Gedcom gedcom, List<? extends SpouseFamilyRef> familyRefs) {
-      List<Family> families = new ArrayList<Family>();
-      for (SpouseFamilyRef familyRef : familyRefs) {
-         Family family = familyRef.getFamily(gedcom);
-         if (family != null) {
-            families.add(family);
-         }
-      }
-      return families;
-   }
+    /**
+     * Convenience function to dereference parent family refs
+     * @param gedcom Gedcom
+     * @return list of parent families
+     */
+    fun getParentFamilies(gedcom: Gedcom): List<Family> {
+        return getFamilies(gedcom, parentFamilyRefs)
+    }
 
-   /**
-    * Convenience function to dereference parent family refs
-    * @param gedcom Gedcom
-    * @return list of parent families
-    */
-   public List<Family> getParentFamilies(Gedcom gedcom) {
-      return getFamilies(gedcom, getParentFamilyRefs());
-   }
+    val parentFamilyRefs: List<ParentFamilyRef?>
+        get() = if (famc != null) famc!! else emptyList<ParentFamilyRef>()
 
-   public List<ParentFamilyRef> getParentFamilyRefs() {
-      return famc != null ? famc : Collections.<ParentFamilyRef>emptyList();
-   }
+    fun setParentFamilyRefs(famc: MutableList<ParentFamilyRef?>?) {
+        this.famc = famc
+    }
 
-   public void setParentFamilyRefs(List<ParentFamilyRef> famc) {
-      this.famc = famc;
-   }
-   
-   public void addParentFamilyRef(ParentFamilyRef parentFamilyRef) {
-      if (famc == null) {
-         famc = new ArrayList<ParentFamilyRef>();
-      }
-      famc.add(parentFamilyRef);
-   }
+    fun addParentFamilyRef(parentFamilyRef: ParentFamilyRef?) {
+        if (famc == null) {
+            famc = ArrayList()
+        }
+        famc!!.add(parentFamilyRef)
+    }
 
-   /**
-    * Convenience function to dereference spouse family refs
-    * @param gedcom Gedcom
-    * @return list of spouse families
-    */
-   public List<Family> getSpouseFamilies(Gedcom gedcom) {
-      return getFamilies(gedcom, getSpouseFamilyRefs());
-   }
+    /**
+     * Convenience function to dereference spouse family refs
+     * @param gedcom Gedcom
+     * @return list of spouse families
+     */
+    fun getSpouseFamilies(gedcom: Gedcom): List<Family> {
+        return getFamilies(gedcom, spouseFamilyRefs)
+    }
 
-   public List<SpouseFamilyRef> getSpouseFamilyRefs() {
-      return fams != null ? fams : Collections.<SpouseFamilyRef>emptyList();
-   }
+    val spouseFamilyRefs: List<SpouseFamilyRef?>
+        get() = if (fams != null) fams!! else emptyList<SpouseFamilyRef>()
 
-   public void setSpouseFamilyRefs(List<SpouseFamilyRef> fams) {
-      this.fams = fams;
-   }
+    fun setSpouseFamilyRefs(fams: MutableList<SpouseFamilyRef?>?) {
+        this.fams = fams
+    }
 
-   public void addSpouseFamilyRef(SpouseFamilyRef spouseFamilyRef) {
-      if (fams == null) {
-         fams = new ArrayList<SpouseFamilyRef>();
-      }
-      fams.add(spouseFamilyRef);
-   }
+    fun addSpouseFamilyRef(spouseFamilyRef: SpouseFamilyRef?) {
+        if (fams == null) {
+            fams = ArrayList()
+        }
+        fams!!.add(spouseFamilyRef)
+    }
 
-   public List<Association> getAssociations() {
-      return assos != null ? assos : Collections.<Association>emptyList();
-   }
+    val associations: List<Association>
+        get() = assos ?: emptyList()
 
-   public void setAssociations(List<Association> assos) {
-      this.assos = assos;
-   }
+    fun setAssociations(assos: MutableList<Association>?) {
+        this.assos = assos
+    }
 
-   public void addAssociation(Association asso) {
-      if (assos == null) {
-         assos = new ArrayList<Association>();
-      }
-      assos.add(asso);
-   }
+    fun addAssociation(asso: Association) {
+        if (assos == null) {
+            assos = ArrayList()
+        }
+        assos!!.add(asso)
+    }
 
-   public String getAncestorInterestSubmitterRef() {
-      return anci;
-   }
-
-   public void setAncestorInterestSubmitterRef(String anci) {
-      this.anci = anci;
-   }
-
-   public String getDescendantInterestSubmitterRef() {
-      return desi;
-   }
-
-   public void setDescendantInterestSubmitterRef(String desi) {
-      this.desi = desi;
-   }
-
-   public String getRecordFileNumber() {
-      return rfn;
-   }
-
-   public void setRecordFileNumber(String rfn) {
-      this.rfn = rfn;
-   }
-
-   public Address getAddress() {
-      return addr;
-   }
-
-   public void setAddress(Address addr) {
-      this.addr = addr;
-   }
-
-   public String getPhone() {
-      return phon;
-   }
-
-   public void setPhone(String phon) {
-      this.phon = phon;
-   }
-
-   public String getFax() {
-      return fax;
-   }
-
-   public void setFax(String fax) {
-      this.fax = fax;
-   }
-
-   public String getEmail() {
-      return email;
-   }
-
-   public void setEmail(String email) {
-      this.email = email;
-   }
-
-   public String getEmailTag() {
-      return emailTag;
-   }
-
-   public void setEmailTag(String emailTag) {
-      this.emailTag = emailTag;
-   }
-
-   public String getWww() {
-      return _www;
-   }
-
-   public void setWww(String www) {
-      this._www = www;
-   }
-
-   public String getWwwTag() {
-      return wwwTag;
-   }
-
-   public void setWwwTag(String wwwTag) {
-      this.wwwTag = wwwTag;
-   }
-
-  public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         for (Name name : getNames()) {
-            name.accept(visitor);
-         }
-         for (ParentFamilyRef parentFamilyRef : getParentFamilyRefs()) {
-            parentFamilyRef.accept(visitor);
-         }
-         for (SpouseFamilyRef spouseFamilyRef : getSpouseFamilyRefs()) {
-            spouseFamilyRef.accept(visitor);
-         }
-         for (Association association : getAssociations()) {
-            association.accept(visitor);
-         }
-         if (addr != null) {
-            addr.accept(visitor);
-         }
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            for (name in getNames()) {
+                name.accept(visitor)
+            }
+            for (parentFamilyRef in parentFamilyRefs) {
+                parentFamilyRef!!.accept(visitor)
+            }
+            for (spouseFamilyRef in spouseFamilyRefs) {
+                spouseFamilyRef!!.accept(visitor)
+            }
+            for (association in associations) {
+                association.accept(visitor)
+            }
+            if (address != null) {
+                address!!.accept(visitor)
+            }
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

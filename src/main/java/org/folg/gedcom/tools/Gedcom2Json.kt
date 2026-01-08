@@ -13,71 +13,68 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.folg.gedcom.tools
 
-package org.folg.gedcom.tools;
-
-import org.folg.gedcom.parser.JsonParser;
-import org.folg.gedcom.parser.ModelParser;
-import org.folg.gedcom.model.Gedcom;
-import org.folg.gedcom.model.GedcomTag;
-import org.folg.gedcom.parser.TreeParser;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-import org.xml.sax.SAXParseException;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.List;
+import org.folg.gedcom.parser.JsonParser
+import org.folg.gedcom.parser.ModelParser
+import org.folg.gedcom.parser.TreeParser
+import org.kohsuke.args4j.CmdLineException
+import org.kohsuke.args4j.CmdLineParser
+import org.kohsuke.args4j.Option
+import org.xml.sax.SAXParseException
+import java.io.File
+import java.io.IOException
+import java.io.PrintWriter
 
 /**
  * User: Dallan
  * Date: 1/1/12
  */
-public class Gedcom2Json {
-   @Option(name="-i", required=true, usage="gedcom file in")
-   private File gedcomIn;
+class Gedcom2Json {
+    @Option(name = "-i", required = true, usage = "gedcom file in")
+    private val gedcomIn: File? = null
 
-   @Option(name="-o", required=false, usage="json file out")
-   private File jsonOut;
+    @Option(name = "-o", required = false, usage = "json file out")
+    private val jsonOut: File? = null
 
-   @Option(name="-t", required=false, usage="use tree parser (use model parser by default)")
-   private boolean useTreeParser = false;
+    @Option(name = "-t", required = false, usage = "use tree parser (use model parser by default)")
+    private val useTreeParser = false
 
-   private void doMain() throws SAXParseException, IOException {
-      String json;
-      JsonParser jsonParser = new JsonParser();
-      if (useTreeParser) {
-         TreeParser treeParser = new TreeParser();
-         List<GedcomTag> gedcomTags = treeParser.parseGedcom(gedcomIn);
-         json = jsonParser.toJson(gedcomTags);
-      }
-      else {
-         ModelParser modelParser = new ModelParser();
-         Gedcom gedcom = modelParser.parseGedcom(gedcomIn);
-         json = jsonParser.toJson(gedcom);
-      }
-      if (jsonOut != null) {
-         PrintWriter writer = new PrintWriter(jsonOut);
-         writer.println(json);
-         writer.close();
-      }
-      else {
-         System.out.println(json);
-      }
-   }
+    @Throws(SAXParseException::class, IOException::class)
+    private fun doMain() {
+        val json: String
+        val jsonParser = JsonParser()
+        if (useTreeParser) {
+            val treeParser = TreeParser()
+            val gedcomTags = treeParser.parseGedcom(gedcomIn)
+            json = jsonParser.toJson(gedcomTags)
+        } else {
+            val modelParser = ModelParser()
+            val gedcom = modelParser.parseGedcom(gedcomIn)
+            json = jsonParser.toJson(gedcom)
+        }
+        if (jsonOut != null) {
+            val writer = PrintWriter(jsonOut)
+            writer.println(json)
+            writer.close()
+        } else {
+            println(json)
+        }
+    }
 
-   public static void main(String[] args) throws SAXParseException, IOException {
-      Gedcom2Json self = new Gedcom2Json();
-      CmdLineParser parser = new CmdLineParser(self);
-      try {
-         parser.parseArgument(args);
-         self.doMain();
-      }
-      catch (CmdLineException e) {
-         System.err.println(e.getMessage());
-         parser.printUsage(System.err);
-      }
-   }
+    companion object {
+        @Throws(SAXParseException::class, IOException::class)
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val self = Gedcom2Json()
+            val parser = CmdLineParser(self)
+            try {
+                parser.parseArgument(*args)
+                self.doMain()
+            } catch (e: CmdLineException) {
+                System.err.println(e.message)
+                parser.printUsage(System.err)
+            }
+        }
+    }
 }

@@ -27,8 +27,8 @@ public class GedcomTest {
         assertNotNull(gedcom);
 
         assertEquals(gedcom.getPerson("I2").getSpouseFamilyRefs().size(), 3);
-        assertEquals(gedcom.getFamily("F1").getHusbandRefs().size(), 1);
-        assertEquals(gedcom.getFamily("F1").getWifeRefs().size(), 1);
+        assertEquals(gedcom.getFamily("F1").get_husbandRefs().size(), 1);
+        assertEquals(gedcom.getFamily("F1").get_wifeRefs().size(), 1);
         assertEquals(gedcom.getFamily("F2").getChildRefs().size(), 1);
     }
 }

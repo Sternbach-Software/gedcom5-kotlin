@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
@@ -22,36 +21,20 @@ package org.folg.gedcom.model;
  *
  * add: FatherRelationship, MotherRelationship
  */
-public class ChildRef extends SpouseRef {
-   private ParentRelationship _frel = null;
-   private ParentRelationship _mrel = null;
+class ChildRef : SpouseRef() {
+    var fatherRelationship: ParentRelationship? = null
+    var motherRelationship: ParentRelationship? = null
 
-   public ParentRelationship getFatherRelationship() {
-      return _frel;
-   }
-
-   public void setFatherRelationship(ParentRelationship frel) {
-      this._frel = frel;
-   }
-
-   public ParentRelationship getMotherRelationship() {
-      return _mrel;
-   }
-
-   public void setMotherRelationship(ParentRelationship mrel) {
-      this._mrel = mrel;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         if (_frel != null) {
-            _frel.accept(visitor, true);
-         }
-         if (_mrel != null) {
-            _mrel.accept(visitor, false);
-         }
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            if (fatherRelationship != null) {
+                fatherRelationship!!.accept(visitor, true)
+            }
+            if (motherRelationship != null) {
+                motherRelationship!!.accept(visitor, false)
+            }
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

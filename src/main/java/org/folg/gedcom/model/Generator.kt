@@ -13,70 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/25/11
  */
-public class Generator extends ExtensionContainer {
-   private String value = null;
-   private String name = null;
-   private String vers = null;
-   private GeneratorCorporation corp = null;
-   private GeneratorData data = null;
+class Generator : ExtensionContainer() {
+    var value: String? = null
+    var name: String? = null
+    var version: String? = null
+    var generatorCorporation: GeneratorCorporation? = null
+    var generatorData: GeneratorData? = null
 
-   public String getValue() {
-      return value;
-   }
-
-   public void setValue(String value) {
-      this.value = value;
-   }
-
-   public String getName() {
-      return name;
-   }
-
-   public void setName(String name) {
-      this.name = name;
-   }
-
-   public String getVersion() {
-      return vers;
-   }
-
-   public void setVersion(String vers) {
-      this.vers = vers;
-   }
-
-   public GeneratorCorporation getGeneratorCorporation() {
-      return corp;
-   }
-
-   public void setGeneratorCorporation(GeneratorCorporation corp) {
-      this.corp = corp;
-   }
-
-   public GeneratorData getGeneratorData() {
-      return data;
-   }
-
-   public void setGeneratorData(GeneratorData data) {
-      this.data = data;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         if (corp != null) {
-            corp.accept(visitor);
-         }
-         if (data != null) {
-            data.accept(visitor);
-         }
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            if (generatorCorporation != null) {
+                generatorCorporation!!.accept(visitor)
+            }
+            if (generatorData != null) {
+                generatorData!!.accept(visitor)
+            }
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

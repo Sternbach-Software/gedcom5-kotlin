@@ -13,37 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/26/11
  */
-public class CharacterSet extends ExtensionContainer {
-   private String value = null;
-   private String vers = null;
+class CharacterSet : ExtensionContainer() {
+    var value: String? = null
+    var version: String? = null
 
-   public String getValue() {
-      return value;
-   }
-
-   public void setValue(String value) {
-      this.value = value;
-   }
-
-   public String getVersion() {
-      return vers;
-   }
-
-   public void setVersion(String vers) {
-      this.vers = vers;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

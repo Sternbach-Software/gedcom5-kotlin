@@ -13,38 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
  * Date: 12/26/11
  */
-public class DateTime extends ExtensionContainer {
-   private String value = null;
-   private String time = null;
+class DateTime : ExtensionContainer() {
+    var value: String? = null
+    var time: String? = null
 
-   public String getValue() {
-      return value;
-   }
-
-   public void setValue(String value) {
-      this.value = value;
-   }
-
-   public String getTime() {
-      return time;
-   }
-
-   public void setTime(String time) {
-      this.time = time;
-   }
-
-   @Override
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package org.folg.gedcom.model;
+package org.folg.gedcom.model
 
 /**
  * User: Dallan
@@ -22,138 +21,52 @@ package org.folg.gedcom.model;
  *
  * omit: Submitter, Submission, Place
  */
-public class Header extends NoteContainer {
-   private Generator sour = null;
-   private String dest = null;
-   private DateTime date = null;
-   private String submRef = null;
-   private String subnRef = null;
-   private Submission subn = null;
-   private String file = null;
-   private String copr = null;
-   private GedcomVersion gedc = null;
-   private CharacterSet charset = null;
-   private String lang = null;
+class Header : NoteContainer() {
+    var generator: Generator? = null
+    var destination: String? = null
+    var dateTime: DateTime? = null
+    var submitterRef: String? = null
 
-   public Generator getGenerator() {
-      return sour;
-   }
+    /**
+     * Use Gedcom.getSubmission in place of this function
+     * @return submission reference
+     */
+    var submissionRef: String? = null
 
-   public void setGenerator(Generator sour) {
-      this.sour = sour;
-   }
+    /**
+     * Use Gedcom.getSubmission in place of this function
+     * @return submission
+     */
+    var submission: Submission? = null
+    var file: String? = null
+    var copyright: String? = null
+    var gedcomVersion: GedcomVersion? = null
+    var characterSet: CharacterSet? = null
+    var language: String? = null
 
-   public String getDestination() {
-      return dest;
-   }
+    fun getSubmitter(gedcom: Gedcom): Submitter? {
+        return gedcom.getSubmitter(submitterRef)
+    }
 
-   public void setDestination(String dest) {
-      this.dest = dest;
-   }
-
-   public DateTime getDateTime() {
-      return date;
-   }
-
-   public void setDateTime(DateTime date) {
-      this.date = date;
-   }
-
-   public String getSubmitterRef() {
-      return submRef;
-   }
-
-   public void setSubmitterRef(String submRef) {
-      this.submRef = submRef;
-   }
-
-   public Submitter getSubmitter(Gedcom gedcom) {
-      return gedcom.getSubmitter(submRef);
-   }
-
-   /**
-    * Use Gedcom.getSubmission in place of this function
-    * @return submission reference
-    */
-   public String getSubmissionRef() {
-      return subnRef;
-   }
-
-   public void setSubmissionRef(String subnRef) {
-      this.subnRef = subnRef;
-   }
-
-   /**
-    * Use Gedcom.getSubmission in place of this function
-    * @return submission
-    */
-   public Submission getSubmission() {
-      return subn;
-   }
-
-   public void setSubmission(Submission subn) {
-      this.subn = subn;
-   }
-
-   public String getFile() {
-      return file;
-   }
-
-   public void setFile(String file) {
-      this.file = file;
-   }
-
-   public String getCopyright() {
-      return copr;
-   }
-   
-   public void setCopyright(String copr) {
-      this.copr = copr;
-   }
-   
-   public GedcomVersion getGedcomVersion() {
-      return gedc;
-   }
-
-   public void setGedcomVersion(GedcomVersion gedc) {
-      this.gedc = gedc;
-   }
-
-   public CharacterSet getCharacterSet() {
-      return charset;
-   }
-
-   public void setCharacterSet(CharacterSet charset) {
-      this.charset = charset;
-   }
-
-   public String getLanguage() {
-      return lang;
-   }
-
-   public void setLanguage(String lang) {
-      this.lang = lang;
-   }
-
-   public void accept(Visitor visitor) {
-      if (visitor.visit(this)) {
-         if (sour != null) {
-            sour.accept(visitor);
-         }
-         if (date != null) {
-            date.accept(visitor);
-         }
-         if (subn != null) {
-            subn.accept(visitor);
-         }
-         if (gedc != null) {
-            gedc.accept(visitor);
-         }
-         if (charset != null) {
-            charset.accept(visitor);
-         }
-         super.visitContainedObjects(visitor);
-         visitor.endVisit(this);
-      }
-   }
+    override fun accept(visitor: Visitor) {
+        if (visitor.visit(this)) {
+            if (generator != null) {
+                generator!!.accept(visitor)
+            }
+            if (dateTime != null) {
+                dateTime!!.accept(visitor)
+            }
+            if (submission != null) {
+                submission!!.accept(visitor)
+            }
+            if (gedcomVersion != null) {
+                gedcomVersion!!.accept(visitor)
+            }
+            if (characterSet != null) {
+                characterSet!!.accept(visitor)
+            }
+            super.visitContainedObjects(visitor)
+            visitor.endVisit(this)
+        }
+    }
 }

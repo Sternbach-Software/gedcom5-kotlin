@@ -1,238 +1,235 @@
-package org.folg.gedcom.tools;
+package org.folg.gedcom.tools
 
-import org.folg.gedcom.model.Gedcom;
-import org.folg.gedcom.model.GedcomTag;
-import org.folg.gedcom.parser.ErrorHandler;
-import org.folg.gedcom.parser.ModelParser;
-import org.folg.gedcom.parser.TreeParser;
-import org.folg.gedcom.visitors.GedcomWriter;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-import org.xml.sax.SAXParseException;
-
-import java.io.*;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.folg.gedcom.model.GedcomTag
+import org.folg.gedcom.parser.*
+import org.folg.gedcom.visitors.GedcomWriter
+import org.kohsuke.args4j.CmdLineException
+import org.kohsuke.args4j.CmdLineParser
+import org.kohsuke.args4j.Option
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.xml.sax.SAXParseException
+import java.io.*
 
 /**
  * Convert a GEDCOM file or directory to the model and back again
  */
-public class CompareGedcom2Gedcom implements ErrorHandler {
-   private static final Logger logger = LoggerFactory.getLogger("org.folg.gedcom.tools");
+class CompareGedcom2Gedcom : ErrorHandler {
+    @Option(name = "-i", required = true, usage = "file or directory containing gedcom files to convert")
+    private val gedcomIn: File? = null
 
-   @Option(name = "-i", required = true, usage = "file or directory containing gedcom files to convert")
-   private File gedcomIn;
-
-   @Option(name = "-o", required = false, usage = "temporary directory to store generated gedcom in")
-   private File gedcomOut;
+    @Option(name = "-o", required = false, usage = "temporary directory to store generated gedcom in")
+    private val gedcomOut: File? = null
 
 
-   private int totalGedcoms = 0;
-   private int equalsCount = 0;
-   private int expectedNotEqualsCount = 0;
-   private int unexpectedNotEqualsCount = 0;
-   private boolean hasError;
-   private boolean logWarningsErrors;
-   private String currentFilename = null;
+    private var totalGedcoms = 0
+    private var equalsCount = 0
+    private var expectedNotEqualsCount = 0
+    private var unexpectedNotEqualsCount = 0
+    private var hasError = false
+    private var logWarningsErrors = false
+    private var currentFilename: String? = null
 
-   @Override
-   public void warning(String message, int lineNumber) {
-      if (logWarningsErrors) {
-         logger.warn(message+" @ "+lineNumber);
-      }
-   }
+    override fun warning(message: String?, lineNumber: Int) {
+        if (logWarningsErrors) {
+            logger.warn("$message @ $lineNumber")
+        }
+    }
 
-   @Override
-   public void error(String message, int lineNumber) {
-      hasError = true;
-      if (logWarningsErrors) {
-         logger.error(message+" @ "+lineNumber+" => "+currentFilename);
-      }
-   }
+    override fun error(message: String?, lineNumber: Int) {
+        hasError = true
+        if (logWarningsErrors) {
+            logger.error("$message @ $lineNumber => $currentFilename")
+        }
+    }
 
-   @Override
-   public void fatalError(String message, int lineNumber) {
-      // handled below
-   }
+    override fun fatalError(message: String?, lineNumber: Int) {
+        // handled below
+    }
 
-   public void convertAndCompareGedcom(File file) {
+    fun convertAndCompareGedcom(file: File?) {
+        val parser = ModelParser()
+        parser.setErrorHandler(this)
+        val treeParser = TreeParser()
+        treeParser.setErrorHandler(this)
+        val writer = GedcomWriter()
 
-      ModelParser parser = new ModelParser();
-      parser.setErrorHandler(this);
-      TreeParser treeParser = new TreeParser();
-      treeParser.setErrorHandler(this);
-      GedcomWriter writer = new GedcomWriter();
+        try {
+            hasError = false
+            logWarningsErrors = false
+            val gedcom = parser.parseGedcom(file)
 
-      try {
-         hasError = false;
-         logWarningsErrors = false;
-         Gedcom gedcom = parser.parseGedcom(file);
+            val tempFile = (if (gedcomOut != null) File(gedcomOut, file!!.name) else File.createTempFile(
+                file!!.name, "tmp"
+            ))
+            val out: OutputStream = FileOutputStream(tempFile)
 
-         File tempFile = (gedcomOut != null ? new File(gedcomOut, file.getName()) :
-                 File.createTempFile(file.getName(), "tmp"));
-         OutputStream out = new FileOutputStream(tempFile);
-
-         writer.write(gedcom, out);
-         if (out != null) {
-            out.close();
-         }
-
-         totalGedcoms++;
-
-         List<GedcomTag> gedcomTags = treeParser.parseGedcom(file);
-         logWarningsErrors = true;
-         currentFilename = tempFile.getName();
-         List<GedcomTag> compareGedcomTags = treeParser.parseGedcom(tempFile);
-
-         if (equals(gedcomTags, compareGedcomTags)) {
-            equalsCount++;
-         }
-         else if (hasError) {
-            expectedNotEqualsCount++;
-         }
-         else {
-            logger.warn("Unexpected not equal: " + file.getName());
-            unexpectedNotEqualsCount++;
-         }
-
-      } catch (SAXParseException e) {
-         logger.error("SaxParseException for file: " + file.getName() + " " + e.getMessage() + " @ " + e.getLineNumber());
-      } catch (IOException e) {
-         logger.error("IOException for file: " + file.getName() + " " + e.getMessage());
-      } catch (RuntimeException e) {
-         e.printStackTrace();
-         logger.error("Exception for file: " + file.getName() + " " + e.getMessage());
-      }
-   }
-
-   @SuppressWarnings("unchecked")
-   private boolean equals(List<GedcomTag> gedcomTags, List<GedcomTag> compareGedcomTags) throws SAXParseException, IOException {
-      // merge CONC tags
-      mergeContConcTags(gedcomTags);
-      mergeContConcTags(compareGedcomTags);
-
-      // remove empty tags
-      removeEmptyTags(gedcomTags);
-      removeEmptyTags(compareGedcomTags);
-
-      // convert multiple TEXT tags into CONT tags
-      convertMultipleTextTags(gedcomTags);
-
-      // sort tags
-      Collections.sort(gedcomTags);
-      Collections.sort(compareGedcomTags);
-
-      // check whether the lists of tags are equal
-      if (gedcomTags.size() != compareGedcomTags.size()) {
-         return false;
-      }
-      for (int indx = 0; indx < gedcomTags.size(); indx++) {
-         GedcomTag gedcomTagOne = gedcomTags.get(indx);
-         GedcomTag gedcomTagTwo = compareGedcomTags.get(indx);
-
-         if (!gedcomTagOne.equals(gedcomTagTwo)) {
-            logger.info("file="+currentFilename+" !tag="+gedcomTagOne.toString()+"<=====>"+gedcomTagTwo.toString());
-            return false;
-         }
-      }
-
-      return true;
-   }
-
-   private void mergeContConcTags(List<GedcomTag> gedcomTags) {
-      for (GedcomTag tag : gedcomTags) {
-         mergeContConcTags(tag);
-      }
-   }
-
-   private void mergeContConcTags(GedcomTag tag) {
-      List<GedcomTag> children = tag.getChildren();
-      if (children.size() > 0) {
-         for (int i = 0; i < children.size(); i++) {
-            GedcomTag child = children.get(i);
-            mergeContConcTags(child);
-            if ("CONC".equals(child.getTag()) || "CONT".equals(child.getTag())) {
-               String concValue = child.getValue() == null ? "" : child.getValue();
-               if ("CONT".equals(child.getTag())) {
-                  concValue = "\n"+concValue;
-               }
-               GedcomTag target = (i == 0 ? tag : children.get(i-1));
-               String value = target.getValue() == null ? "" : target.getValue();
-               target.setValue(value+concValue);
-               for (GedcomTag tagToMove : child.getChildren()) {
-                  target.addChild(tagToMove);
-               }
-               children.remove(i);
-               i--;
+            writer.write(gedcom, out)
+            if (out != null) {
+                out.close()
             }
-         }
-         if (tag.getChildren().size() == 0) {
-            tag.setChildren(null);
-         }
-      }
-   }
 
-   private void removeEmptyTags(List<GedcomTag> gedcomTags) {
-      Iterator<GedcomTag> iter = gedcomTags.iterator();
-      while (iter.hasNext()) {
-         GedcomTag tag = iter.next();
-         removeEmptyTags(tag.getChildren());
-         if (tag.isEmpty()) {
-            iter.remove();
-         }
-      }
-   }
+            totalGedcoms++
 
-   // convert geni's 3 TEXT ... 3 TEXT ... sequence into 3 TEXT ... 4 CONT ... which should be considered equivalent
-   private void convertMultipleTextTags(List<GedcomTag> gedcomTags) {
-      Iterator<GedcomTag> iter = gedcomTags.iterator();
-      GedcomTag prevTag = null;
-      while (iter.hasNext()) {
-         GedcomTag tag = iter.next();
-         if ("TEXT".equals(tag.getTag())) {
-            if (prevTag != null && "TEXT".equals(prevTag.getTag()) && prevTag.getChildren().size() == 0) {
-               iter.remove();
-               tag.setTag("CONT");
-               prevTag.addChild(tag);
+            val gedcomTags = treeParser.parseGedcom(file)
+            logWarningsErrors = true
+            currentFilename = tempFile.name
+            val compareGedcomTags = treeParser.parseGedcom(tempFile)
+
+            if (equals(gedcomTags, compareGedcomTags)) {
+                equalsCount++
+            } else if (hasError) {
+                expectedNotEqualsCount++
+            } else {
+                logger.warn("Unexpected not equal: " + file.name)
+                unexpectedNotEqualsCount++
             }
-         }
-         prevTag = tag;
-         convertMultipleTextTags(tag.getChildren());
-      }
-   }
+        } catch (e: SAXParseException) {
+            logger.error("SaxParseException for file: " + file!!.name + " " + e.message + " @ " + e.lineNumber)
+        } catch (e: IOException) {
+            logger.error("IOException for file: " + file!!.name + " " + e.message)
+        } catch (e: RuntimeException) {
+            e.printStackTrace()
+            logger.error("Exception for file: " + file!!.name + " " + e.message)
+        }
+    }
 
-   private void doMain() throws FileNotFoundException {
-      if (gedcomIn.isDirectory()) {
-         int cnt = 0;
-         for (File file : gedcomIn.listFiles()) {
-            convertAndCompareGedcom(file);
-            if (++cnt % 100 == 0) {
-               System.out.print(".");
+    @Throws(SAXParseException::class, IOException::class)
+    private fun equals(gedcomTags: MutableList<GedcomTag?>?, compareGedcomTags: MutableList<GedcomTag?>?): Boolean {
+        // merge CONC tags
+        mergeContConcTags(gedcomTags)
+        mergeContConcTags(compareGedcomTags)
+
+        // remove empty tags
+        removeEmptyTags(gedcomTags)
+        removeEmptyTags(compareGedcomTags)
+
+        // convert multiple TEXT tags into CONT tags
+        convertMultipleTextTags(gedcomTags)
+
+        // sort tags
+       gedcomTags?.sortBy { it }
+       compareGedcomTags?.sortBy { it }
+
+        // check whether the lists of tags are equal
+        if (gedcomTags!!.size != compareGedcomTags!!.size) {
+            return false
+        }
+        for (indx in gedcomTags.indices) {
+            val gedcomTagOne = gedcomTags[indx]
+            val gedcomTagTwo = compareGedcomTags[indx]
+
+            if (gedcomTagOne != gedcomTagTwo) {
+                logger.info("file=" + currentFilename + " !tag=" + gedcomTagOne.toString() + "<=====>" + gedcomTagTwo.toString())
+                return false
             }
-         }
-      } else if (gedcomIn.isFile()) {
-         convertAndCompareGedcom(gedcomIn);
-      }
+        }
 
-      System.out.println("Total Number of Gedcoms = " + totalGedcoms);
-      System.out.println("Number of Gedcoms that are Equal = " + equalsCount);
-      System.out.println("Expected number of Gedcoms that are NOT Equal = " + expectedNotEqualsCount);
-      System.out.println("UNEXPECTED number of Gedcoms that are NOT Equal = " + unexpectedNotEqualsCount);
-   }
+        return true
+    }
 
-   public static void main(String[] args) throws FileNotFoundException {
-      CompareGedcom2Gedcom self = new CompareGedcom2Gedcom();
-      CmdLineParser parser = new CmdLineParser(self);
-      try {
-         parser.parseArgument(args);
-         self.doMain();
-      } catch (CmdLineException e) {
-         System.err.println(e.getMessage());
-         parser.printUsage(System.err);
-      }
-   }
+    private fun mergeContConcTags(gedcomTags: List<GedcomTag?>?) {
+        for (tag in gedcomTags!!) {
+            mergeContConcTags(tag)
+        }
+    }
+
+    private fun mergeContConcTags(tag: GedcomTag?) {
+        val children = tag!!._children
+        if (children!!.size > 0) {
+            var i = 0
+            while (i < children.size) {
+                val child = children[i]
+                mergeContConcTags(child)
+                if ("CONC" == child?.tag || "CONT" == child?.tag) {
+                    var concValue = if (child.value == null) "" else child.value
+                    if ("CONT" == child.tag) {
+                        concValue = """
+                            
+                            $concValue
+                            """.trimIndent()
+                    }
+                    val target = (if (i == 0) tag else children[i - 1])
+                    val value = if (target?.value == null) "" else target.value
+                    target?.value = value + concValue
+                    for (tagToMove in child!!._children ?: emptyList()) {
+                        target!!.addChild(tagToMove)
+                    }
+                    children.removeAt(i)
+                    i--
+                }
+                i++
+            }
+            if (tag._children?.size == 0) {
+                tag._children = null
+            }
+        }
+    }
+
+    private fun removeEmptyTags(gedcomTags: MutableList<GedcomTag?>?) {
+        val iter = gedcomTags!!.iterator()
+        while (iter.hasNext()) {
+            val tag = iter.next()
+            removeEmptyTags(tag!!._children)
+            if (tag.isEmpty) {
+                iter.remove()
+            }
+        }
+    }
+
+    // convert geni's 3 TEXT ... 3 TEXT ... sequence into 3 TEXT ... 4 CONT ... which should be considered equivalent
+    private fun convertMultipleTextTags(gedcomTags: MutableList<GedcomTag?>?) {
+        val iter = gedcomTags!!.iterator()
+        var prevTag: GedcomTag? = null
+        while (iter.hasNext()) {
+            val tag = iter.next()
+            if ("TEXT" == tag?.tag) {
+                if (prevTag != null && "TEXT" == prevTag.tag && prevTag._children?.size == 0) {
+                    iter.remove()
+                    tag.tag = "CONT"
+                    prevTag.addChild(tag)
+                }
+            }
+            prevTag = tag
+            convertMultipleTextTags(tag!!._children)
+        }
+    }
+
+    @Throws(FileNotFoundException::class)
+    private fun doMain() {
+        if (gedcomIn!!.isDirectory) {
+            var cnt = 0
+            for (file in gedcomIn.listFiles()) {
+                convertAndCompareGedcom(file)
+                if (++cnt % 100 == 0) {
+                    print(".")
+                }
+            }
+        } else if (gedcomIn.isFile) {
+            convertAndCompareGedcom(gedcomIn)
+        }
+
+        println("Total Number of Gedcoms = $totalGedcoms")
+        println("Number of Gedcoms that are Equal = $equalsCount")
+        println("Expected number of Gedcoms that are NOT Equal = $expectedNotEqualsCount")
+        println("UNEXPECTED number of Gedcoms that are NOT Equal = $unexpectedNotEqualsCount")
+    }
+
+    companion object {
+        private val logger: Logger = LoggerFactory.getLogger("org.folg.gedcom.tools")
+
+        @Throws(FileNotFoundException::class)
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val self = CompareGedcom2Gedcom()
+            val parser = CmdLineParser(self)
+            try {
+                parser.parseArgument(*args)
+                self.doMain()
+            } catch (e: CmdLineException) {
+                System.err.println(e.message)
+                parser.printUsage(System.err)
+            }
+        }
+    }
 }

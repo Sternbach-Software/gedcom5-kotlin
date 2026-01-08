@@ -26,9 +26,9 @@ public class JsonParserTest {
         header.setCopyright(expectedCopyright);
 
         Name name = new Name();
-        name.setValue(expectedName);
+        name.value = expectedName;
         Person individual = new Person();
-        individual.setId(expectedId);
+        individual.id = expectedId;
         individual.setNames(Collections.singletonList(name));
 
         Gedcom gedcom = new Gedcom();
